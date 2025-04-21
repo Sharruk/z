@@ -625,6 +625,37 @@ def add_menu_item():
         }
     })
 
+@app.route('/api/restaurant/update', methods=['POST'])
+@login_required
+@allowed_roles(['restaurant'])
+def update_restaurant():
+    data = request.json
+    restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
+    
+    if not restaurant:
+        return jsonify({'success': False, 'message': 'Restaurant not found'}), 404
+        
+    if 'name' in data:
+        restaurant.name = data['name']
+    if 'description' in data:
+        restaurant.description = data['description']
+    if 'cuisine_type' in data:
+        restaurant.cuisine_type = data['cuisine_type']
+    if 'address' in data:
+        restaurant.address = data['address']
+    if 'phone' in data:
+        restaurant.phone = data['phone']
+        
+    try:
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': 'Restaurant details updated successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/api/restaurant/update_location', methods=['POST'])
 @login_required
 @allowed_roles(['restaurant'])
@@ -645,6 +676,81 @@ def update_restaurant_location():
     return jsonify({
         'success': True,
         'message': 'Location updated successfully'
+    })
+
+@app.route('/api/order/food_prepared', methods=['POST'])
+@login_required
+@allowed_roles(['restaurant'])
+def food_prepared():
+    data = request.json
+    order_id = data.get('order_id')
+    
+    if not order_id:
+        return jsonify({'success': False, 'message': 'Order ID required'}), 400
+        
+    restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
+    order = Order.query.filter_by(id=order_id, restaurant_id=restaurant.id).first()
+    
+    if not order:
+        return jsonify({'success': False, 'message': 'Order not found'}), 404
+        
+    order.status = 'ready'
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Order marked as ready for pickup'
+    })
+
+@app.route('/api/delivery/accept_order', methods=['POST'])
+@login_required
+@allowed_roles(['delivery'])
+def accept_order():
+    data = request.json
+    order_id = data.get('order_id')
+    
+    if not order_id:
+        return jsonify({'success': False, 'message': 'Order ID required'}), 400
+        
+    order = Order.query.filter_by(
+        id=order_id,
+        status='ready',
+        delivery_partner_id=None
+    ).first()
+    
+    if not order:
+        return jsonify({'success': False, 'message': 'Order not available'}), 404
+        
+    order.delivery_partner_id = current_user.id
+    order.status = 'picking'
+    db.session.commit()
+    
+    maps_url = f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(order.restaurant.address)}"
+    
+    return jsonify({
+        'success': True,
+        'message': 'Order accepted successfully',
+        'maps_url': maps_url
+    })
+
+@app.route('/api/delivery/available_orders')
+@login_required
+@allowed_roles(['delivery'])
+def get_available_orders():
+    orders = Order.query.filter_by(
+        status='ready',
+        delivery_partner_id=None
+    ).all()
+    
+    return jsonify({
+        'success': True,
+        'orders': [{
+            'id': order.id,
+            'restaurant_name': order.restaurant.name,
+            'restaurant_address': order.restaurant.address,
+            'items': order.order_items_display,
+            'created_at': order.created_at.isoformat()
+        } for order in orders]
     })
 
 @app.route('/api/toggle_menu_item', methods=['POST'])

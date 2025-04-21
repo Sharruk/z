@@ -115,17 +115,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     increaseButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const input = this.parentElement.querySelector('input[type="number"]') || 
-                          this.previousElementSibling;
-            const currentValue = parseInt(input.value || input.textContent);
+            const input = this.parentElement.querySelector('input[type="number"]');
+            if (!input) return;
+            
+            const currentValue = parseInt(input.value);
             const max = parseInt(input.getAttribute('max') || 10);
             
             if (currentValue < max) {
-                if (input.tagName === 'INPUT') {
-                    input.value = currentValue + 1;
-                } else {
-                    input.textContent = currentValue + 1;
-                }
+                input.value = currentValue + 1;
+                // Trigger change event to update cart
+                input.dispatchEvent(new Event('change'));
             }
         });
     });

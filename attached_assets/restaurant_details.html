@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ restaurant.name }} - EZFOODZ{% endblock %}
+
+{% block content %}
+<!-- Restaurant Header -->
+<div class="restaurant-header bg-dark d-flex align-items-center text-white mb-4 rounded">
+    <div class="container restaurant-header-content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1>{{ restaurant.name }}</h1>
+                    <span class="badge {% if restaurant.is_open %}bg-success{% else %}bg-danger{% endif %} px-3 py-2">
+                        {% if restaurant.is_open %}OPEN{% else %}CLOSED{% endif %}
+                    </span>
+                </div>
+                <p class="lead">{{ restaurant.cuisine_type }}</p>
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <span>{{ restaurant.rating }}</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        <span>{{ restaurant.address }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if restaurant.is_open %}
+<!-- Menu Items -->
+<div class="row">
+    <div class="col-lg-8">
+        <h2 class="mb-4">Menu</h2>
+        {% if menu_items %}
+            {% for item in menu_items %}
+                {% if item.is_available %}
+                <div class="card menu-item-card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="card-title">
+                                    {% if item.is_vegetarian %}
+                                        <span class="badge bg-success me-2" title="Vegetarian">Veg</span>
+                                    {% else %}
+                                        <span class="badge bg-danger me-2" title="Non-Vegetarian">Non-Veg</span>
+                                    {% endif %}
+                                    {{ item.name }}
+                                </h5>
+                                <p class="card-text">{{ item.description }}</p>
+                                <h6 class="card-subtitle mb-2 text-muted">₹{{ item.price }}</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <form action="{{ url_for('add_to_cart') }}" method="POST">
+                                    <input type="hidden" name="menu_item_id" value="{{ item.id }}">
+                                    <div class="d-flex justify-content-end align-items-center">
+                                        <div class="quantity-control me-2">
+                                            <button type="button" class="btn btn-sm btn-secondary quantity-decrease">-</button>
+                                            <input type="number" name="quantity" value="1" min="1" max="10" readonly>
+                                            <button type="button" class="btn btn-sm btn-secondary quantity-increase">+</button>
+                                        </div>
+                                        <button type="submit" class="btn btn-ez-primary">
+                                            <i class="fas fa-cart-plus"></i> Add
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">No menu items available for this restaurant.</div>
+        {% endif %}
+    </div>
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Restaurant Info</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-phone me-2"></i>{{ restaurant.phone }}</p>
+                <p><i class="fas fa-map-marker-alt me-2"></i>{{ restaurant.address }}</p>
+                <p>{{ restaurant.description }}</p>
+                {% if current_user.is_authenticated and current_user.role == 'customer' %}
+                <a href="{{ url_for('cart') }}" class="btn btn-ez-primary w-100">
+                    <i class="fas fa-shopping-cart me-1"></i> View Cart
+                    {% if session.get('cart') %}
+                        <span class="badge rounded-pill bg-light text-dark">{{ session.get('cart')|length }}</span>
+                    {% endif %}
+                </a>
+                {% elif not current_user.is_authenticated %}
+                <a href="{{ url_for('login') }}" class="btn btn-ez-primary w-100">
+                    <i class="fas fa-sign-in-alt me-1"></i> Login to Order
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    This restaurant is currently closed. Please check back later.
+</div>
+{% endif %}
+{% endblock %}

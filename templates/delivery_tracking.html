@@ -1,0 +1,384 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-truck me-2"></i> Order #{{ order.id }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Order Status -->
+                <div class="mb-4">
+                    <h6 class="mb-3">Order Status</h6>
+                    
+                    <div class="d-flex justify-content-between position-relative mb-4">
+                        <!-- Status Progress Bar -->
+                        <div class="progress position-absolute" style="height: 3px; width: 90%; top: 10px; left: 5%;">
+                            <div class="progress-bar bg-ez-primary" role="progressbar" 
+                                style="width: {{ '0%' if order.status == 'pending' else '20%' if order.status == 'preparing' else '40%' if order.status == 'ready' else '60%' if order.status == 'picking' else '80%' if order.status == 'delivering' else '100%' }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Status Nodes -->
+                        <div class="text-center">
+                            <div class="rounded-circle {{ 'bg-ez-primary' if order.status in ['pending', 'preparing', 'ready', 'picking', 'delivering', 'completed'] else 'bg-secondary' }}" 
+                                style="width: 22px; height: 22px; margin: 0 auto;"></div>
+                            <div class="mt-2 small {{ 'fw-bold' if order.status == 'pending' }}">Ordered</div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="rounded-circle {{ 'bg-ez-primary' if order.status in ['preparing', 'ready', 'picking', 'delivering', 'completed'] else 'bg-secondary' }}" 
+                                style="width: 22px; height: 22px; margin: 0 auto;"></div>
+                            <div class="mt-2 small {{ 'fw-bold' if order.status == 'preparing' }}">Preparing</div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="rounded-circle {{ 'bg-ez-primary' if order.status in ['ready', 'picking', 'delivering', 'completed'] else 'bg-secondary' }}" 
+                                style="width: 22px; height: 22px; margin: 0 auto;"></div>
+                            <div class="mt-2 small {{ 'fw-bold' if order.status == 'ready' }}">Ready</div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="rounded-circle {{ 'bg-ez-primary' if order.status in ['picking', 'delivering', 'completed'] else 'bg-secondary' }}" 
+                                style="width: 22px; height: 22px; margin: 0 auto;"></div>
+                            <div class="mt-2 small {{ 'fw-bold' if order.status == 'picking' }}">Picked up</div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="rounded-circle {{ 'bg-ez-primary' if order.status in ['delivering', 'completed'] else 'bg-secondary' }}" 
+                                style="width: 22px; height: 22px; margin: 0 auto;"></div>
+                            <div class="mt-2 small {{ 'fw-bold' if order.status == 'delivering' }}">On the way</div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="rounded-circle {{ 'bg-ez-primary' if order.status == 'completed' else 'bg-secondary' }}" 
+                                style="width: 22px; height: 22px; margin: 0 auto;"></div>
+                            <div class="mt-2 small {{ 'fw-bold' if order.status == 'completed' }}">Delivered</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Status Display -->
+                    <div class="alert {{ 'alert-success' if order.status == 'completed' else 'alert-info' }} mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas {{ 'fa-check-circle' if order.status == 'completed' else 'fa-info-circle' }} me-2"></i>
+                            <div>
+                                <div class="fw-bold">
+                                    {% if order.status == 'pending' %}
+                                        Order Received
+                                    {% elif order.status == 'preparing' %}
+                                        Food is being prepared
+                                    {% elif order.status == 'ready' %}
+                                        Food is ready, waiting for pickup
+                                    {% elif order.status == 'picking' %}
+                                        Delivery partner is picking up your order
+                                    {% elif order.status == 'delivering' %}
+                                        Your order is on the way
+                                    {% elif order.status == 'completed' %}
+                                        Order has been delivered
+                                    {% elif order.status == 'cancelled' %}
+                                        Order has been cancelled
+                                    {% else %}
+                                        Order status: {{ order.status }}
+                                    {% endif %}
+                                </div>
+                                
+                                {% if order.status in ['picking', 'delivering'] %}
+                                    <div class="small text-muted" id="delivery-eta">
+                                        Estimated arrival: Calculating...
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Details -->
+                <div class="mb-4">
+                    <h6 class="mb-3">Order Details</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Order ID:</div>
+                        <div class="col-7">#{{ order.id }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Date:</div>
+                        <div class="col-7">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Restaurant:</div>
+                        <div class="col-7">{{ order.restaurant.name }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Items:</div>
+                        <div class="col-7">{{ order.item_count() }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Total Amount:</div>
+                        <div class="col-7 fw-bold">₹{{ order.total_amount | round(2) }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Payment:</div>
+                        <div class="col-7">
+                            {{ order.payment_method | upper }}
+                            <span class="badge {{ 'bg-success' if order.payment_status == 'completed' else 'bg-warning' if order.payment_status == 'pending' else 'bg-danger' }} ms-1">
+                                {{ order.payment_status }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-5 text-muted">Delivery to:</div>
+                        <div class="col-7">{{ order.delivery_address }}</div>
+                    </div>
+                </div>
+                
+                <!-- Delivery Partner (if assigned) -->
+                {% if order.delivery_partner and order.status in ['picking', 'delivering'] %}
+                <div class="mb-4">
+                    <h6 class="mb-3">Delivery Partner</h6>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-ez-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <div class="fw-bold">{{ order.delivery_partner.username }}</div>
+                            <div class="small text-muted">{{ order.delivery_partner.phone }}</div>
+                            
+                            <a href="tel:{{ order.delivery_partner.phone }}" class="btn btn-sm btn-outline-ez-primary mt-2">
+                                <i class="fas fa-phone-alt me-1"></i> Call
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Order Items -->
+                <div>
+                    <h6 class="mb-3">Items Ordered</h6>
+                    
+                    <div class="list-group">
+                        {% for item in order.items %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div>{{ item.menu_item.name }}</div>
+                                    <div class="small text-muted">
+                                        <span>Qty: {{ item.quantity }}</span>
+                                        {% if item.menu_item.is_vegetarian %}
+                                        <span class="ms-2">
+                                            <i class="fas fa-circle text-success" style="font-size: 10px;"></i> Veg
+                                        </span>
+                                        {% else %}
+                                        <span class="ms-2">
+                                            <i class="fas fa-circle text-danger" style="font-size: 10px;"></i> Non-veg
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="fw-bold">₹{{ item.price | round(2) }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marked-alt me-2"></i> Live Tracking
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <!-- Map Container with height for proper rendering -->
+                <div id="map" style="height: 500px; width: 100%;"></div>
+                
+                <!-- Location permission warning, shown if needed -->
+                <div id="location-permission-warning" class="alert alert-warning m-3 d-none">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span>Please allow location access to enable live tracking.</span>
+                </div>
+                
+                <!-- Tracking not available warning for certain states -->
+                {% if order.status in ['pending', 'preparing', 'ready', 'completed', 'cancelled'] %}
+                <div class="alert alert-info m-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>
+                        {% if order.status in ['pending', 'preparing', 'ready'] %}
+                            Real-time tracking will be available once a delivery partner picks up your order.
+                        {% elif order.status == 'completed' %}
+                            This order has been delivered. Tracking is no longer available.
+                        {% elif order.status == 'cancelled' %}
+                            This order has been cancelled. Tracking is not available.
+                        {% endif %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ maps_api_key }}&libraries=geometry&callback=initTrackingMap" async defer></script>
+<script src="{{ url_for('static', filename='js/delivery_tracking.js') }}"></script>
+
+<script>
+// Initialize tracking with the order ID
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tracking if order status is appropriate
+    {% if order.status in ['picking', 'delivering'] %}
+        initDeliveryTracking({{ order.id }}, false);
+    {% else %}
+        // Just show a static map with the delivery location
+        function initTrackingMap() {
+            const mapElement = document.getElementById('map');
+            if (!mapElement) return;
+            
+            // Default to Chennai coordinates if no specific location
+            const defaultLat = 13.0827;
+            const defaultLng = 80.2707;
+            
+            const map = new google.maps.Map(mapElement, {
+                center: { lat: defaultLat, lng: defaultLng },
+                zoom: 13,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                    {
+                        featureType: "administrative.locality",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#d59563" }],
+                    },
+                    {
+                        featureType: "poi",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#d59563" }],
+                    },
+                    {
+                        featureType: "poi.park",
+                        elementType: "geometry",
+                        stylers: [{ color: "#263c3f" }],
+                    },
+                    {
+                        featureType: "poi.park",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#6b9a76" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry",
+                        stylers: [{ color: "#38414e" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#212a37" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#9ca5b3" }],
+                    },
+                    {
+                        featureType: "road.highway",
+                        elementType: "geometry",
+                        stylers: [{ color: "#746855" }],
+                    },
+                    {
+                        featureType: "road.highway",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#1f2835" }],
+                    },
+                    {
+                        featureType: "road.highway",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#f3d19c" }],
+                    },
+                    {
+                        featureType: "transit",
+                        elementType: "geometry",
+                        stylers: [{ color: "#2f3948" }],
+                    },
+                    {
+                        featureType: "transit.station",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#d59563" }],
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{ color: "#17263c" }],
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#515c6d" }],
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.stroke",
+                        stylers: [{ color: "#17263c" }],
+                    },
+                ],
+            });
+            
+            // Fetch the customer location for this order
+            fetch(`/api/order/{{ order.id }}/location`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const customerPosition = {
+                            lat: data.latitude,
+                            lng: data.longitude
+                        };
+                        
+                        // Add customer marker
+                        const customerMarker = new google.maps.Marker({
+                            position: customerPosition,
+                            map: map,
+                            icon: {
+                                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                                scaledSize: new google.maps.Size(40, 40)
+                            },
+                            title: 'Delivery Location'
+                        });
+                        
+                        // Add info window
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `<div><strong>Delivery Address:</strong><br>${data.address}</div>`
+                        });
+                        
+                        customerMarker.addListener('click', function() {
+                            infoWindow.open(map, customerMarker);
+                        });
+                        
+                        // Center map on customer position
+                        map.setCenter(customerPosition);
+                        map.setZoom(15);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching location:', error);
+                });
+        }
+    {% endif %}
+});
+</script>
+{% endblock %}

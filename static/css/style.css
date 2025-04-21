@@ -1,0 +1,404 @@
+/* EZFOODZ Main Style Sheet */
+
+/* Custom Color Variables */
+:root {
+    --ez-primary: #b180ff;
+    --ez-primary-dark: #9b68f2;
+    --ez-primary-light: #c79aff;
+    --ez-secondary: #6b42b8;
+    --ez-secondary-dark: #5a36a0;
+    --ez-secondary-light: #8057d3;
+    --ez-dark: #1c2128;
+    --ez-darker: #13161b;
+    --ez-light: #f1f1f1;
+    --ez-gray: #a1a1a1;
+    --ez-border: #2d333b;
+    --ez-card-bg: #222933;
+    --bs-border-color: #2d333b;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    color: #e6e6e6;
+    background-color: var(--ez-dark);
+}
+
+a {
+    color: var(--ez-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--ez-primary-light);
+}
+
+/* Custom Classes */
+.bg-ez-primary {
+    background-color: var(--ez-primary) !important;
+}
+
+.text-ez-primary {
+    color: var(--ez-primary) !important;
+}
+
+.btn-ez-primary {
+    background-color: var(--ez-primary);
+    border-color: var(--ez-primary);
+    color: white;
+}
+
+.btn-ez-primary:hover, .btn-ez-primary:focus {
+    background-color: var(--ez-primary-dark);
+    border-color: var(--ez-primary-dark);
+    color: white;
+}
+
+.btn-outline-ez-primary {
+    color: var(--ez-primary);
+    border-color: var(--ez-primary);
+}
+
+.btn-outline-ez-primary:hover, .btn-outline-ez-primary:focus {
+    background-color: var(--ez-primary);
+    color: white;
+}
+
+/* Card and Container Styling */
+.card {
+    background-color: var(--ez-card-bg);
+    border: 1px solid var(--ez-border);
+    color: #e6e6e6;
+}
+
+.card-header {
+    background-color: var(--ez-primary);
+    color: white;
+    border-bottom: 1px solid var(--ez-border);
+}
+
+.card-body {
+    background-color: var(--ez-card-bg);
+}
+
+.card-footer {
+    background-color: var(--ez-darker);
+    border-top: 1px solid var(--ez-border);
+}
+
+.list-group-item {
+    background-color: var(--ez-card-bg);
+    color: #e6e6e6;
+    border-color: var(--ez-border);
+}
+
+.list-group-item-action:hover {
+    background-color: #2c3340;
+    color: white;
+}
+
+.modal-content {
+    background-color: var(--ez-card-bg);
+    color: #e6e6e6;
+}
+
+.dropdown-menu {
+    background-color: var(--ez-card-bg);
+    border-color: var(--ez-border);
+}
+
+.dropdown-item {
+    color: #e6e6e6;
+}
+
+.dropdown-item:hover {
+    background-color: #2c3340;
+    color: white;
+}
+
+.dropdown-divider {
+    border-top: 1px solid var(--ez-border);
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    background-color: #2c3340;
+    border-color: var(--ez-border);
+    color: #e6e6e6;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #2c3340;
+    border-color: var(--ez-primary);
+    color: #e6e6e6;
+    box-shadow: 0 0 0 0.25rem rgba(177, 128, 255, 0.25);
+}
+
+.input-group-text {
+    background-color: #2c3340;
+    border-color: var(--ez-border);
+    color: #e6e6e6;
+}
+
+/* Table Styling */
+.table {
+    color: #e6e6e6;
+    border-color: var(--ez-border);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #2c3340;
+    color: white;
+}
+
+.table-light, .table-light>th, .table-light>td {
+    background-color: #2c3340 !important;
+    color: #e6e6e6 !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Navbar Customization */
+.navbar {
+    background-color: var(--ez-darker) !important;
+    border-bottom: 1px solid var(--ez-border);
+}
+
+/* Alert Styling */
+.alert {
+    background-color: var(--ez-card-bg);
+    border-color: var(--ez-border);
+    color: #e6e6e6;
+}
+
+.alert-info {
+    background-color: rgba(23, 162, 184, 0.2);
+    border-color: rgba(23, 162, 184, 0.3);
+    color: #8be3f5;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-color: rgba(40, 167, 69, 0.3);
+    color: #75e792;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffdd66;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #f5a3ad;
+}
+
+/* Footer Styling */
+footer {
+    background-color: var(--ez-darker) !important;
+    border-top: 1px solid var(--ez-border);
+}
+
+/* Custom Container for Hero Section */
+.hero-container {
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: var(--ez-gray);
+}
+
+.search-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Badge Styling for Cart */
+.badge.bg-ez-primary {
+    background-color: var(--ez-primary);
+    color: white;
+}
+
+/* Restaurant Cards */
+.restaurant-closed {
+    opacity: 0.7;
+}
+
+.restaurant-closed::before {
+    content: "CLOSED";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    background-color: rgba(220, 53, 69, 0.8);
+    color: white;
+    padding: 10px 30px;
+    font-weight: bold;
+    font-size: 1.5rem;
+    z-index: 1;
+    border-radius: 5px;
+}
+
+/* Order Status Badges */
+.badge.status-pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge.status-preparing {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.badge.status-ready {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge.status-picking {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.badge.status-delivering {
+    background-color: #007bff;
+    color: white;
+}
+
+.badge.status-completed {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge.status-cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Order Details Page */
+.status-circle {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 2px solid #ced4da;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.status-circle i {
+    display: none;
+    color: white;
+}
+
+.status-circle.active {
+    background-color: var(--ez-primary);
+    border-color: var(--ez-primary);
+}
+
+.status-circle.active i {
+    display: block;
+}
+
+.status-line {
+    flex: 1;
+    height: 3px;
+    background-color: #e9ecef;
+    position: relative;
+    top: 13px;
+}
+
+/* Menu Item Cards */
+.menu-item-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.out-of-stock {
+    opacity: 0.7;
+    background-color: #f8f9fa;
+}
+
+/* Quantity Controls */
+.quantity-control {
+    display: flex;
+    align-items: center;
+}
+
+.quantity-control input,
+.quantity-control .quantity-value {
+    width: 40px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    margin: 0 5px;
+}
+
+/* Restaurant Header */
+.restaurant-header {
+    padding: 60px 0;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.restaurant-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 0.25rem;
+}
+
+.restaurant-header-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Form Styles */
+.form-control:focus {
+    border-color: var(--ez-primary-light);
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .restaurant-header {
+        padding: 40px 0;
+    }
+    
+    .status-circle {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .status-line {
+        top: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .quantity-control {
+        flex-direction: column;
+    }
+    
+    .quantity-control input,
+    .quantity-control .quantity-value {
+        margin: 5px 0;
+    }
+}

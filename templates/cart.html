@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Cart - EZFOODZ{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Your Cart</h1>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+        </a>
+        <a href="{{ url_for('clear_cart') }}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to clear your cart?')">
+            <i class="fas fa-trash me-1"></i> Clear Cart
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Order from {{ restaurant.name }}</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if cart_items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Item</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Quantity</th>
+                                <th scope="col" class="text-end">Total</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>₹{{ item.price }}</td>
+                                <td>
+                                    <div class="quantity-control">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary quantity-decrease" data-index="{{ loop.index0 }}">-</button>
+                                        <span class="quantity-value">{{ item.quantity }}</span>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary quantity-increase" data-index="{{ loop.index0 }}">+</button>
+                                    </div>
+                                </td>
+                                <td class="text-end fw-bold">₹{{ (item.price * item.quantity)|round(2) }}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-danger remove-item" data-index="{{ loop.index0 }}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info m-3">
+                    Your cart is empty. <a href="{{ url_for('home') }}">Browse restaurants</a> to add items.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        {% if cart_items %}
+        <div class="card shadow-sm mb-4 sticky-top" style="top: 20px;">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Items Total</span>
+                    <span id="subtotal">₹{{ subtotal }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Delivery Fee</span>
+                    <span>₹{{ delivery_fee }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Taxes</span>
+                    <span id="tax">₹{{ tax }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4 fw-bold">
+                    <span>Total</span>
+                    <span class="text-ez-primary" id="total">₹{{ total }}</span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('checkout') }}" class="btn btn-ez-primary">
+                        <i class="fas fa-shopping-basket me-1"></i> Proceed to Checkout
+                    </a>
+                    
+                    <div class="text-center my-2">
+                        <span class="text-muted">- OR -</span>
+                    </div>
+                    
+                    <form action="{{ url_for('create_checkout_session') }}" method="POST">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="fab fa-stripe me-1"></i> Checkout with Stripe
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quantity controls
+    const decreaseButtons = document.querySelectorAll('.quantity-decrease');
+    const increaseButtons = document.querySelectorAll('.quantity-increase');
+    const removeButtons = document.querySelectorAll('.remove-item');
+    
+    // Function to update cart item
+    function updateCartItem(index, newQuantity) {
+        fetch('/update-cart-item', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                index: index,
+                quantity: newQuantity
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update displayed totals
+                document.getElementById('subtotal').textContent = `₹${data.subtotal.toFixed(2)}`;
+                document.getElementById('tax').textContent = `₹${data.tax.toFixed(2)}`;
+                document.getElementById('total').textContent = `₹${data.total.toFixed(2)}`;
+                
+                if (newQuantity <= 0) {
+                    // Item removed, reload page
+                    window.location.reload();
+                } else {
+                    // Update quantity display
+                    const quantityElement = document.querySelectorAll('.quantity-value')[index];
+                    quantityElement.textContent = newQuantity;
+                }
+            } else {
+                alert('Error updating cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+    
+    decreaseButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            const quantityElement = document.querySelectorAll('.quantity-value')[index];
+            const currentValue = parseInt(quantityElement.textContent);
+            
+            if (currentValue > 1) {
+                updateCartItem(index, currentValue - 1);
+            }
+        });
+    });
+    
+    increaseButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            const quantityElement = document.querySelectorAll('.quantity-value')[index];
+            const currentValue = parseInt(quantityElement.textContent);
+            
+            if (currentValue < 10) {
+                updateCartItem(index, currentValue + 1);
+            }
+        });
+    });
+    
+    removeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            if (confirm('Remove this item from your cart?')) {
+                updateCartItem(index, 0);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

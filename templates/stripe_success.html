@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Successful - EZFOODZ{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <span class="display-1 text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </span>
+                    </div>
+                    
+                    <h2 class="mb-3">Payment Successful!</h2>
+                    <p class="text-muted mb-4">
+                        Your order has been placed successfully and is being processed.
+                        You can track your order in the dashboard.
+                    </p>
+                    
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('user_dashboard') }}" class="btn btn-ez-primary">
+                            <i class="fas fa-user me-2"></i> Go to Dashboard
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-muted">
+                <small>
+                    <i class="fas fa-info-circle me-1"></i> 
+                    A confirmation email has been sent to your registered email address.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

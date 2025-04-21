@@ -1,0 +1,51 @@
+Create a Python script for a food delivery system with the following features:
+
+1. **GPS Integration:** Connect the delivery partner with the ordering person's location.
+2. **Delivery Partner Interface:** Allow delivery agents to view and accept orders.
+3. **Payment Method:** Include basic payment handling.
+4. **Bot Accounts for Restaurants:** Create bot accounts with email and password for each restaurant.
+5. **Restaurant Database:** Include three food courts with the following details:
+   - **SSN Main Canteen**  
+     - Location: https://maps.app.goo.gl/YevdXRfegZuZS1Wr5  
+     - Unique ID: `ssn_main_canteen`  
+     - Menu:  
+       - Dosa - ₹50  
+       - Idli - ₹30  
+       - Pongal - ₹40  
+       - Lemon Rice - ₹45  
+       - Coffee - ₹20  
+   - **Rishub's Food Court**  
+     - Location: https://maps.app.goo.gl/1HzuQF414hWSorHC9  
+     - Unique ID: `rishub_food_court`  
+     - Menu:  
+       - Burger - ₹80  
+       - Fries - ₹60  
+       - Coke - ₹40  
+       - Sandwich - ₹70  
+       - Pasta - ₹100  
+   - **Ashwin's Food Court**  
+     - Location: https://maps.app.goo.gl/1ZAjqaWcjAa4Uu5V6  
+     - Unique ID: `ashwin_food_court`  
+     - Menu:  
+       - Biryani - ₹150  
+       - Chicken Curry - ₹130  
+       - Roti - ₹40  
+       - Paneer Butter Masala - ₹120  
+       - Lassi - ₹50  
+
+6. **User & Restaurant Bot Accounts:**  
+   - Generate bot accounts (email, password) for each restaurant.  
+   - Store the bot credentials in a `README.md` file.  
+
+The script should use **Python dictionaries** for storing restaurant and menu data. Also, generate a basic interface for delivery partners to **view and accept orders**.
+
+**Expected Output:**  
+- Display restaurant details  
+- Accept orders from users  
+- Assign orders to delivery partners  
+- Simulate payment processing  
+- Generate bot credentials  
+
+Generate a `README.md` file containing:  
+- Bot email and password for each restaurant  
+- Instructions to run the script

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Cancelled - EZFOODZ{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <span class="display-1 text-danger">
+                            <i class="fas fa-times-circle"></i>
+                        </span>
+                    </div>
+                    
+                    <h2 class="mb-3">Payment Cancelled</h2>
+                    <p class="text-muted mb-4">
+                        Your payment has been cancelled and no charges were made.
+                        Your cart items are still saved if you'd like to try again.
+                    </p>
+                    
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('cart') }}" class="btn btn-ez-primary">
+                            <i class="fas fa-shopping-cart me-2"></i> Return to Cart
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-muted">
+                <small>
+                    <i class="fas fa-question-circle me-1"></i> 
+                    Having issues with payment? <a href="#" class="text-decoration-none">Contact support</a>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

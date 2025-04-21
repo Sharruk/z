@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EZFOODZ{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bs-ez-primary: #ac76fa;
+            --bs-ez-primary-dark: #8a50e9;
+            --bs-ez-light: #f3eaff;
+            --bs-ez-dark: #23154b;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .navbar-brand span {
+            color: var(--bs-ez-primary);
+        }
+        
+        .nav-link.active {
+            color: var(--bs-ez-primary) !important;
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .footer {
+            background-color: var(--bs-gray-800);
+            padding: 20px 0;
+        }
+        
+        /* Custom button style */
+        .btn-ez-primary {
+            background-color: var(--bs-ez-primary);
+            border-color: var(--bs-ez-primary-dark);
+            color: white;
+        }
+        
+        .btn-ez-primary:hover {
+            background-color: var(--bs-ez-primary-dark);
+            border-color: var(--bs-ez-primary-dark);
+            color: white;
+        }
+        
+        .text-ez-primary {
+            color: var(--bs-ez-primary) !important;
+        }
+        
+        .bg-ez-primary {
+            background-color: var(--bs-ez-primary) !important;
+        }
+    </style>
+    
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-utensils me-2 text-ez-primary"></i> EZ<span>FOODZ</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" href="{{ url_for('home') }}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            {% if current_user.role == 'customer' %}
+                                <a class="nav-link" href="{{ url_for('cart') }}">
+                                    <i class="fas fa-shopping-cart me-1"></i> Cart
+                                    {% if session.get('cart') %}
+                                        <span class="badge rounded-pill bg-ez-primary">{{ session.get('cart')|length }}</span>
+                                    {% endif %}
+                                </a>
+                            {% endif %}
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                {% if current_user.role == 'customer' %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('user_dashboard') }}">
+                                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                                        </a>
+                                    </li>
+                                {% elif current_user.role == 'restaurant' %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('restaurant_dashboard') }}">
+                                            <i class="fas fa-store me-2"></i> Restaurant Dashboard
+                                        </a>
+                                    </li>
+                                {% elif current_user.role == 'delivery' %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('delivery_dashboard') }}">
+                                            <i class="fas fa-motorcycle me-2"></i> Delivery Dashboard
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == url_for('login') %}active{% endif %}" href="{{ url_for('login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == url_for('register') %}active{% endif %}" href="{{ url_for('register') }}">
+                                <i class="fas fa-user-plus me-1"></i> Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Toast Container for Notifications -->
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+    
+    <!-- Main Content -->
+    <main class="py-4">
+        <div class="container">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer text-light mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="text-ez-primary">EZFOODZ</h5>
+                    <p class="small">The easiest way to get your favorite food delivered to your doorstep.</p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-light"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('home') }}" class="text-decoration-none text-secondary">Home</a></li>
+                        <li><a href="#" class="text-decoration-none text-secondary">About Us</a></li>
+                        <li><a href="#" class="text-decoration-none text-secondary">Partner With Us</a></li>
+                        <li><a href="#" class="text-decoration-none text-secondary">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h6>Legal</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-decoration-none text-secondary">Terms of Service</a></li>
+                        <li><a href="#" class="text-decoration-none text-secondary">Privacy Policy</a></li>
+                        <li><a href="#" class="text-decoration-none text-secondary">Refund Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h6>Get the App</h6>
+                    <div class="mt-2">
+                        <a href="#" class="text-decoration-none text-secondary d-block mb-2">
+                            <i class="fab fa-apple me-1"></i> App Store
+                        </a>
+                        <a href="#" class="text-decoration-none text-secondary d-block">
+                            <i class="fab fa-google-play me-1"></i> Play Store
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p class="small text-secondary mb-0">&copy; 2025 EZFOODZ. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

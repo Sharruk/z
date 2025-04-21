@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Dashboard - EZFOODZ{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Delivery Dashboard</h1>
+        <p class="text-muted">Welcome, {{ current_user.username }}</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ url_for('home') }}" class="btn btn-ez-primary">
+            <i class="fas fa-home me-1"></i> Home
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Active Deliveries -->
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h4 class="mb-0">Active Deliveries</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Restaurant</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Address</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if active_deliveries %}
+                                {% for delivery in active_deliveries %}
+                                <tr>
+                                    <td>{{ delivery.id }}</td>
+                                    <td>{{ delivery.restaurant.name }}</td>
+                                    <td>{{ delivery.customer.username }}</td>
+                                    <td>
+                                        <span class="badge status-{{ delivery.status }}">
+                                            {{ delivery.status|title }}
+                                        </span>
+                                    </td>
+                                    <td class="small">{{ delivery.delivery_address|truncate(30) }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('order_details', order_id=delivery.id) }}" class="btn btn-outline-secondary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if delivery.status == 'picking' %}
+                                            <button class="btn btn-outline-warning update-order-status" data-order-id="{{ delivery.id }}" data-status="delivering" title="Start Delivery">
+                                                <i class="fas fa-motorcycle"></i>
+                                            </button>
+                                            {% elif delivery.status == 'delivering' %}
+                                            <button class="btn btn-outline-success update-order-status" data-order-id="{{ delivery.id }}" data-status="completed" title="Complete Delivery">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No active deliveries at this time</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delivery History -->
+        <div class="card">
+            <div class="card-header bg-ez-primary text-white">
+                <h4 class="mb-0">Delivery History</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Restaurant</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if delivery_history %}
+                                {% for delivery in delivery_history %}
+                                <tr>
+                                    <td>{{ delivery.id }}</td>
+                                    <td>{{ delivery.restaurant.name }}</td>
+                                    <td>{{ delivery.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>₹{{ delivery.total_amount }}</td>
+                                    <td>
+                                        <span class="badge status-{{ delivery.status }}">
+                                            {{ delivery.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('order_details', order_id=delivery.id) }}" class="btn btn-sm btn-outline-secondary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No delivery history yet</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Delivery Partner Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Name</label>
+                    <p class="mb-1">{{ current_user.username }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Email</label>
+                    <p class="mb-1">{{ current_user.email }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Phone</label>
+                    <p class="mb-1">{{ current_user.phone }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Address</label>
+                    <p class="mb-1">{{ current_user.address }}</p>
+                </div>
+                <div class="d-grid">
+                    <button class="btn btn-outline-primary disabled">
+                        <i class="fas fa-edit me-1"></i> Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Card -->
+        <div class="card">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Status & Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Active Deliveries:</span>
+                    <span class="badge bg-primary">{{ active_deliveries|length }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Total Completed:</span>
+                    <span class="badge bg-success">{{ delivery_history|length }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Overall Rating:</span>
+                    <span>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star-half-alt text-warning"></i>
+                        4.5/5
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Order status update buttons
+    const orderStatusBtns = document.querySelectorAll('.update-order-status');
+    orderStatusBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const status = this.getAttribute('data-status');
+            updateOrderStatus(orderId, status);
+        });
+    });
+    
+    // Function to update order status
+    function updateOrderStatus(orderId, status) {
+        fetch('/api/order/update_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: status
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Display success message
+                showToast(data.message, 'success');
+                
+                // Refresh the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // Display error message
+                showToast('Error: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred. Please try again.', 'danger');
+        });
+    }
+    
+    // Function to show toast notifications
+    function showToast(message, type) {
+        // Create a new toast element
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        
+        // Add the toast to the toast container
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            // Create toast container if it doesn't exist
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        toastContainer.innerHTML += toastHtml;
+        
+        // Initialize and show the toast
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+        
+        // Remove the toast after it's hidden
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+});
+</script>
+{% endblock %}

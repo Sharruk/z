@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} - EZFOODZ{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            {% if current_user.role == 'customer' %}
+                <a href="{{ url_for('user_dashboard') }}" class="text-decoration-none me-3">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            {% elif current_user.role == 'restaurant' %}
+                <a href="{{ url_for('restaurant_dashboard') }}" class="text-decoration-none me-3">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('home') }}" class="text-decoration-none me-3">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            {% endif %}
+            <h1 class="mb-0">Order #{{ order.id }}</h1>
+        </div>
+        
+        <!-- Order Status -->
+        <div class="card border-0 mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Order Status</h5>
+                    <span class="badge status-{{ order.status }} px-3 py-2">{{ order.status|title }}</span>
+                </div>
+                
+                <div class="progress mb-4" style="height: 10px; background-color: #2c3340;">
+                    {% set progress = {
+                        'pending': 0,
+                        'preparing': 20,
+                        'ready': 40,
+                        'picking': 60,
+                        'delivering': 80,
+                        'completed': 100,
+                        'cancelled': 0
+                    } %}
+                    {% set current_progress = progress[order.status] or 0 %}
+                    <div class="progress-bar bg-ez-primary" role="progressbar" style="width: {{ current_progress }}%" aria-valuenow="{{ current_progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between position-relative mb-4">
+                    {% for status in ['pending', 'preparing', 'ready', 'delivering', 'completed'] %}
+                        <div class="text-center">
+                            <div class="status-circle {% if progress[order.status] >= progress[status] and order.status != 'cancelled' %}active{% endif %}">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="mt-2 small text-ez-gray">{{ status|title }}</div>
+                        </div>
+                        {% if not loop.last %}
+                            <div class="status-line"></div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-ez-gray">Ordered on:</span>
+                        <span>{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    <div>
+                        <span class="text-ez-gray">Payment:</span>
+                        <span class="badge {% if order.payment_status == 'completed' %}bg-success{% elif order.payment_status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}">
+                            {{ order.payment_status|title }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Restaurant Info -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Restaurant</h5>
+            </div>
+            <div class="card-body d-flex align-items-center">
+                <div style="width: 80px; height: 80px;" class="rounded bg-secondary d-flex justify-content-center align-items-center me-3">
+                    {% if order.restaurant.image_url %}
+                    <img src="{{ order.restaurant.image_url }}" alt="{{ order.restaurant.name }}" class="img-fluid rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                    <i class="fas fa-utensils fa-2x text-white"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h5 class="mb-1">{{ order.restaurant.name }}</h5>
+                    <p class="text-ez-gray mb-1">{{ order.restaurant.address }}</p>
+                    <p class="mb-0 small">
+                        <i class="fas fa-phone-alt me-1"></i> {{ order.restaurant.phone }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Items -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Order Items</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Item</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Quantity</th>
+                                <th scope="col" class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>{{ item.menu_item.name }}</td>
+                                <td>₹{{ item.price }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td class="text-end fw-bold">₹{{ (item.price * item.quantity)|round(2) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delivery Details -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Delivery Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-ez-gray mb-2">Delivery Address</h6>
+                        <p class="mb-3">{{ order.delivery_address }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-ez-gray mb-2">Delivery Partner</h6>
+                        {% if order.delivery_partner %}
+                        <p class="mb-1">{{ order.delivery_partner.username }}</p>
+                        <p class="mb-3">{{ order.delivery_partner.phone }}</p>
+                        {% else %}
+                        <p class="text-muted mb-3">Not assigned yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if order.status in ['picking', 'delivering'] %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i> Your order is on the way! Estimated delivery time: 25-35 minutes.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+        <div class="card border-0 mb-4 sticky-top" style="top: 20px;">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Items Total</span>
+                    <span>₹{{ order.total_amount }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Delivery Fee</span>
+                    <span>₹40.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Taxes</span>
+                    <span>₹{{ (order.total_amount * 0.05)|round(2) }}</span>
+                </div>
+                <hr class="border-secondary">
+                <div class="d-flex justify-content-between mb-4 fw-bold">
+                    <span>Total</span>
+                    <span class="text-ez-primary">₹{{ (order.total_amount + 40 + (order.total_amount * 0.05))|round(2) }}</span>
+                </div>
+                
+                <!-- Payment Info -->
+                <div class="mb-4">
+                    <h6 class="mb-2 text-ez-gray">Payment Method</h6>
+                    <p class="mb-0">
+                        {% if order.payment_method == 'cash' %}
+                        <i class="fas fa-money-bill-wave me-2 text-success"></i> Cash on Delivery
+                        {% else %}
+                        <i class="fas fa-credit-card me-2 text-ez-primary"></i> Online Payment
+                        {% endif %}
+                    </p>
+                </div>
+                
+                {% if current_user.role == 'customer' and order.status == 'pending' %}
+                <div class="d-grid">
+                    <button class="btn btn-danger update-order-status" data-order-id="{{ order.id }}" data-status="cancelled">
+                        <i class="fas fa-times me-1"></i> Cancel Order
+                    </button>
+                </div>
+                {% elif current_user.role == 'restaurant' %}
+                    {% if order.status == 'pending' %}
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-warning update-order-status" data-order-id="{{ order.id }}" data-status="preparing">
+                            <i class="fas fa-utensils me-1"></i> Start Preparing
+                        </button>
+                        <button class="btn btn-outline-danger update-order-status" data-order-id="{{ order.id }}" data-status="cancelled">
+                            <i class="fas fa-times me-1"></i> Cancel Order
+                        </button>
+                    </div>
+                    {% elif order.status == 'preparing' %}
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-info update-order-status" data-order-id="{{ order.id }}" data-status="ready">
+                            <i class="fas fa-check me-1"></i> Mark as Ready
+                        </button>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Need Help Section -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Need Help?</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-phone-alt me-2"></i> Call Support
+                    </button>
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-comment-alt me-2"></i> Chat Support
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update order status buttons
+    const orderStatusBtns = document.querySelectorAll('.update-order-status');
+    orderStatusBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const status = this.getAttribute('data-status');
+            updateOrderStatus(orderId, status);
+        });
+    });
+    
+    // Function to update order status
+    function updateOrderStatus(orderId, status) {
+        if (status === 'cancelled' && !confirm('Are you sure you want to cancel this order?')) {
+            return;
+        }
+        
+        // Disable button and show loading state
+        const button = event.currentTarget;
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        fetch('/api/order/update_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: status
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Display success message using toast if available
+                if (window.showToast) {
+                    window.showToast(data.message, 'success');
+                } else {
+                    alert(data.message);
+                }
+                
+                // Refresh the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // Restore button state
+                button.disabled = false;
+                button.innerHTML = originalText;
+                
+                // Display error message
+                if (window.showToast) {
+                    window.showToast(data.message || 'Error updating order status.', 'danger');
+                } else {
+                    alert(data.message || 'Error updating order status.');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Restore button state
+            button.disabled = false;
+            button.innerHTML = originalText;
+            
+            // Display error message
+            if (window.showToast) {
+                window.showToast('An error occurred. Please try again.', 'danger');
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

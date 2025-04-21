@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Restaurant Bot Manager</h2>
+        <p class="text-muted">Configure automated order handling and settings for {{ restaurant.name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i> Bot Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    The restaurant bot can automatically handle orders, allowing you to focus on food preparation.
+                </div>
+                
+                <form id="bot-settings-form">
+                    <!-- Bot Status -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="bot-enabled" 
+                                {{ 'checked' if bot_settings.get('bot_enabled') else '' }}>
+                            <label class="form-check-label" for="bot-enabled">
+                                <strong>Enable Restaurant Bot</strong>
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            When enabled, the bot will handle order management automatically
+                        </div>
+                    </div>
+                    
+                    <!-- Auto Accept Orders -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auto-accept-orders"
+                                {{ 'checked' if bot_settings.get('auto_accept_orders') else '' }}
+                                {{ 'disabled' if not bot_settings.get('bot_enabled') else '' }}>
+                            <label class="form-check-label" for="auto-accept-orders">
+                                <strong>Auto-Accept Orders</strong>
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            Automatically accept incoming orders without requiring manual approval
+                        </div>
+                    </div>
+                    
+                    <!-- Preparation Time -->
+                    <div class="mb-4">
+                        <label for="auto-ready-time" class="form-label">
+                            <strong>Automatic Ready Time (minutes)</strong>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="auto-ready-time" min="5" max="60" 
+                                value="{{ bot_settings.get('auto_ready_time', 15) }}"
+                                {{ 'disabled' if not bot_settings.get('bot_enabled') else '' }}>
+                            <span class="input-group-text">minutes</span>
+                        </div>
+                        <div class="form-text text-muted">
+                            Time after which orders will be automatically marked as ready for pickup
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-ez-primary" id="save-settings-btn">
+                            <i class="fas fa-save me-2"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i> Bot Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-ez-primary text-white d-flex justify-content-center align-items-center me-3" 
+                                style="width: 36px; height: 36px; flex-shrink: 0;">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div>
+                                <strong>Automatic Order Acceptance</strong>
+                                <p class="text-muted mb-0 small">
+                                    New orders will be automatically accepted, eliminating the need for manual approval
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-ez-primary text-white d-flex justify-content-center align-items-center me-3" 
+                                style="width: 36px; height: 36px; flex-shrink: 0;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <strong>Smart Status Updates</strong>
+                                <p class="text-muted mb-0 small">
+                                    Order statuses are updated automatically based on your configured preparation time
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-ez-primary text-white d-flex justify-content-center align-items-center me-3" 
+                                style="width: 36px; height: 36px; flex-shrink: 0;">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div>
+                                <strong>Customer Notifications</strong>
+                                <p class="text-muted mb-0 small">
+                                    Customers receive real-time updates when their order status changes
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-ez-primary text-white d-flex justify-content-center align-items-center me-3" 
+                                style="width: 36px; height: 36px; flex-shrink: 0;">
+                                <i class="fas fa-language"></i>
+                            </div>
+                            <div>
+                                <strong>Automated Responses</strong>
+                                <p class="text-muted mb-0 small">
+                                    The bot can respond to customer inquiries with predefined messages
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bot Activity -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i> Bot Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center my-4">
+                    <div class="display-4 text-ez-primary fw-bold">
+                        <span id="bot-activity-count">0</span>
+                    </div>
+                    <p class="text-muted">Orders automatically processed today</p>
+                </div>
+                
+                <div class="progress mb-4" style="height: 10px;">
+                    <div class="progress-bar bg-ez-primary" role="progressbar" id="bot-efficiency-bar"
+                        style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between text-muted small">
+                    <span>Bot Efficiency</span>
+                    <span id="bot-efficiency-text">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bot Settings Form
+    const botEnabledToggle = document.getElementById('bot-enabled');
+    const autoAcceptOrdersToggle = document.getElementById('auto-accept-orders');
+    const autoReadyTimeInput = document.getElementById('auto-ready-time');
+    const botSettingsForm = document.getElementById('bot-settings-form');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    
+    // Toggle dependent settings when bot enabled state changes
+    if (botEnabledToggle) {
+        botEnabledToggle.addEventListener('change', function() {
+            const isEnabled = this.checked;
+            
+            if (autoAcceptOrdersToggle) {
+                autoAcceptOrdersToggle.disabled = !isEnabled;
+            }
+            
+            if (autoReadyTimeInput) {
+                autoReadyTimeInput.disabled = !isEnabled;
+            }
+        });
+    }
+    
+    // Handle form submission
+    if (botSettingsForm) {
+        botSettingsForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Disable the save button and show loading state
+            if (saveSettingsBtn) {
+                saveSettingsBtn.disabled = true;
+                saveSettingsBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            }
+            
+            // Get form values
+            const botEnabled = botEnabledToggle ? botEnabledToggle.checked : false;
+            const autoAcceptOrders = autoAcceptOrdersToggle ? autoAcceptOrdersToggle.checked : false;
+            const autoReadyTime = autoReadyTimeInput ? parseInt(autoReadyTimeInput.value, 10) : 15;
+            
+            // Send settings update to server
+            fetch(`/api/restaurant-bot/{{ restaurant.id }}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bot_enabled: botEnabled,
+                    auto_accept_orders: autoAcceptOrders,
+                    auto_ready_time: autoReadyTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showAlert('Bot settings updated successfully', 'success');
+                } else {
+                    // Show error message
+                    showAlert('Failed to update settings: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                showAlert('Error saving settings. Please try again.', 'danger');
+            })
+            .finally(() => {
+                // Re-enable save button
+                if (saveSettingsBtn) {
+                    saveSettingsBtn.disabled = false;
+                    saveSettingsBtn.innerHTML = '<i class="fas fa-save me-2"></i> Save Settings';
+                }
+            });
+        });
+    }
+    
+    // Helper to show alerts
+    function showAlert(message, type = 'info') {
+        // Create alert element
+        const alertEl = document.createElement('div');
+        alertEl.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alertEl.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert at the top of the form
+        if (botSettingsForm) {
+            botSettingsForm.prepend(alertEl);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alertEl);
+                bsAlert.close();
+            }, 5000);
+        }
+    }
+    
+    // Simulate bot activity data for demo
+    function simulateBotActivity() {
+        // Get elements
+        const botActivityCount = document.getElementById('bot-activity-count');
+        const botEfficiencyBar = document.getElementById('bot-efficiency-bar');
+        const botEfficiencyText = document.getElementById('bot-efficiency-text');
+        
+        // Generate random activity count between 5-20
+        const activityCount = Math.floor(Math.random() * 16) + 5;
+        
+        // Calculate efficiency percentage
+        const efficiency = Math.floor(Math.random() * 31) + 70; // 70-100%
+        
+        // Update UI
+        if (botActivityCount) botActivityCount.textContent = activityCount;
+        if (botEfficiencyBar) {
+            botEfficiencyBar.style.width = `${efficiency}%`;
+            botEfficiencyBar.setAttribute('aria-valuenow', efficiency);
+        }
+        if (botEfficiencyText) botEfficiencyText.textContent = `${efficiency}%`;
+    }
+    
+    // Run simulation when page loads
+    simulateBotActivity();
+});
+</script>
+{% endblock %}

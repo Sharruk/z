@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}EZFOODZ - Home{% endblock %}
+
+{% block content %}
+<header class="py-5 bg-dark text-white mb-4 rounded">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center">
+            <h1 class="display-4 fw-bolder">EZ<span class="text-ez-primary">FOODZ</span></h1>
+            <p class="lead fw-normal text-white-50 mb-0">Order food from your favorite restaurants</p>
+            
+            <!-- Search bar -->
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" id="restaurant-search" class="form-control" placeholder="Search for restaurants...">
+                        <button class="btn btn-ez-primary" type="button" id="search-button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="mb-5">
+    <h2 class="mb-4">Popular Restaurants</h2>
+    
+    {% if restaurants %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for restaurant in restaurants %}
+        <div class="col">
+            <div class="card h-100 shadow {% if not restaurant.is_open %}restaurant-closed{% endif %}">
+                {% if restaurant.image_url %}
+                <img src="{{ restaurant.image_url }}" class="card-img-top" alt="{{ restaurant.name }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-secondary d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <i class="fas fa-utensils fa-3x text-white"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ restaurant.name }}</h5>
+                        <span class="badge {% if restaurant.is_open %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if restaurant.is_open %}OPEN{% else %}CLOSED{% endif %}
+                        </span>
+                    </div>
+                    <p class="card-text small text-muted">{{ restaurant.cuisine_type }}</p>
+                    <p class="card-text">{{ restaurant.description }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-star text-warning"></i>
+                            <span>{{ restaurant.rating }}/5</span>
+                        </div>
+                        <a href="{{ url_for('restaurant_details', restaurant_id=restaurant.id) }}" class="btn btn-ez-primary">
+                            <i class="fas fa-utensils me-1"></i> View Menu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">No restaurants available at the moment.</div>
+    {% endif %}
+</div>
+
+<!-- Initialize Database Link for Testing -->
+<div class="text-center mt-5 pt-3 border-top">
+    <p class="text-muted mb-2">For testing purposes only:</p>
+    <a href="{{ url_for('init_db') }}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-database me-1"></i> Initialize Test Data
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('restaurant-search');
+    const searchButton = document.getElementById('search-button');
+    const restaurantsContainer = document.querySelector('.row-cols-1.row-cols-md-2.row-cols-lg-3.g-4');
+    const noResultsAlert = document.querySelector('.alert.alert-info');
+    let originalRestaurants = null;
+    
+    // Store the original restaurant HTML for resetting
+    if (restaurantsContainer) {
+        originalRestaurants = restaurantsContainer.innerHTML;
+    }
+    
+    // Function to perform search
+    function performSearch() {
+        const query = searchInput.value.trim();
+        
+        // Make API request to search endpoint
+        fetch(`/api/search_restaurants?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Check if there are results
+                if (data.restaurants && data.restaurants.length > 0) {
+                    // Clear current results
+                    restaurantsContainer.innerHTML = '';
+                    
+                    // Add each restaurant to the results
+                    data.restaurants.forEach(restaurant => {
+                        const restaurantCard = createRestaurantCard(restaurant);
+                        restaurantsContainer.innerHTML += restaurantCard;
+                    });
+                    
+                    // Show the container, hide the alert
+                    restaurantsContainer.parentElement.style.display = 'block';
+                    if (noResultsAlert) {
+                        noResultsAlert.style.display = 'none';
+                    }
+                } else {
+                    // No results, show alert
+                    restaurantsContainer.parentElement.style.display = 'none';
+                    if (noResultsAlert) {
+                        noResultsAlert.style.display = 'block';
+                        noResultsAlert.textContent = 'No restaurants found matching your search criteria.';
+                    } else {
+                        // Create alert if doesn't exist
+                        const newAlert = document.createElement('div');
+                        newAlert.className = 'alert alert-info';
+                        newAlert.textContent = 'No restaurants found matching your search criteria.';
+                        restaurantsContainer.parentElement.insertAdjacentElement('afterend', newAlert);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error searching restaurants:', error);
+                // Restore original restaurants on error
+                if (originalRestaurants) {
+                    restaurantsContainer.innerHTML = originalRestaurants;
+                }
+            });
+    }
+    
+    // Helper function to create restaurant card HTML
+    function createRestaurantCard(restaurant) {
+        return `
+        <div class="col">
+            <div class="card h-100 shadow ${!restaurant.is_open ? 'restaurant-closed' : ''}">
+                <img src="${restaurant.image_url}" class="card-img-top" alt="${restaurant.name}" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">${restaurant.name}</h5>
+                        <span class="badge ${restaurant.is_open ? 'bg-success' : 'bg-danger'}">
+                            ${restaurant.is_open ? 'OPEN' : 'CLOSED'}
+                        </span>
+                    </div>
+                    <p class="card-text small text-muted">${restaurant.cuisine_type || ''}</p>
+                    <p class="card-text">${restaurant.description || ''}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-star text-warning"></i>
+                            <span>${restaurant.rating}/5</span>
+                        </div>
+                        <a href="/restaurant/${restaurant.id}" class="btn btn-ez-primary">
+                            <i class="fas fa-utensils me-1"></i> View Menu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+    
+    // Search button click event
+    if (searchButton) {
+        searchButton.addEventListener('click', performSearch);
+    }
+    
+    // Search input enter key event
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+
+        // Search as you type (debounced)
+        let debounceTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(performSearch, 300);
+        });
+    }
+});
+</script>
+{% endblock %}

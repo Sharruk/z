@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 class="mb-4">Delivery Dashboard</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="form-check form-switch d-inline-block me-3">
+            <input class="form-check-input" type="checkbox" id="online-toggle" {% if is_online %}checked{% endif %}>
+            <label class="form-check-label" for="online-toggle">
+                <span class="badge {{ 'bg-success' if is_online else 'bg-secondary' }}">
+                    {{ 'ONLINE' if is_online else 'OFFLINE' }}
+                </span>
+            </label>
+        </div>
+        <button class="btn btn-outline-secondary" id="refresh-button">
+            <i class="fas fa-sync-alt me-1"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Dashboard Stats -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0 bg-ez-primary text-white rounded p-3">
+                        <i class="fas fa-motorcycle fa-lg"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Total Deliveries</h6>
+                        <h3 class="mb-0">{{ total_deliveries }}</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-ez-primary" role="progressbar" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0 bg-ez-primary text-white rounded p-3">
+                        <i class="fas fa-rupee-sign fa-lg"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Total Earnings</h6>
+                        <h3 class="mb-0">₹{{ total_earnings | round(2) }}</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-ez-primary" role="progressbar" style="width: 65%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0 bg-ez-primary text-white rounded p-3">
+                        <i class="fas fa-star fa-lg"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Rating</h6>
+                        <h3 class="mb-0">{{ average_rating }}</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-ez-primary" role="progressbar" 
+                        style="width: {{ (average_rating / 5) * 100 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0 bg-ez-primary text-white rounded p-3">
+                        <i class="fas fa-clock fa-lg"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Avg. Delivery Time</h6>
+                        <h3 class="mb-0">22 mins</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-ez-primary" role="progressbar" style="width: 80%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Available Orders -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-list-alt me-2"></i> Available Orders
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if available_orders %}
+                <div class="list-group list-group-flush">
+                    {% for order in available_orders %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Order #{{ order.id }}</h6>
+                                <div class="text-muted small">{{ order.restaurant.name }}</div>
+                                <div class="small mt-1">
+                                    <strong>Delivery:</strong> {{ order.delivery_address|truncate(30) }}
+                                </div>
+                                <div class="small mt-1">
+                                    <strong>Items:</strong> {{ order.item_count() }} | 
+                                    <strong>Amount:</strong> ₹{{ order.total_amount }}
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-ez-primary accept-order-btn" 
+                                    data-order-id="{{ order.id }}">
+                                    <i class="fas fa-check me-1"></i> Accept
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center p-4">
+                    <img src="{{ url_for('static', filename='img/no_orders.svg') }}" alt="No Orders" 
+                        class="img-fluid mb-3" style="max-height: 120px;">
+                    <h6 class="text-muted">No orders available right now</h6>
+                    <p class="small text-muted">Check back soon for new delivery requests</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- My Current Deliveries -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-route me-2"></i> My Deliveries
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if my_orders %}
+                <div class="list-group list-group-flush">
+                    {% for order in my_orders %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-1">Order #{{ order.id }}</h6>
+                                    <span class="badge {{ 'bg-warning' if order.status == 'picking' else 'bg-info' }} ms-2">
+                                        {{ order.status|upper }}
+                                    </span>
+                                </div>
+                                <div class="text-muted small">{{ order.restaurant.name }}</div>
+                                <div class="small mt-1">
+                                    <strong>Delivery:</strong> {{ order.delivery_address|truncate(30) }}
+                                </div>
+                                <div class="small mt-1">
+                                    <strong>Payment:</strong> 
+                                    {{ order.payment_method|upper }} 
+                                    {% if order.payment_method == 'cod' %}
+                                    <span class="badge bg-warning text-dark">
+                                        Collect: ₹{{ order.total_amount }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('tracking', order_id=order.id) }}" 
+                                    class="btn btn-sm btn-outline-ez-primary mb-1 w-100">
+                                    <i class="fas fa-map-marker-alt me-1"></i> Track
+                                </a>
+                                
+                                {% if order.status == 'picking' %}
+                                <button class="btn btn-sm btn-outline-success w-100 update-status-btn" 
+                                    data-order-id="{{ order.id }}" data-status="delivering">
+                                    <i class="fas fa-box-open me-1"></i> Picked Up
+                                </button>
+                                {% elif order.status == 'delivering' %}
+                                <button class="btn btn-sm btn-outline-success w-100 update-status-btn" 
+                                    data-order-id="{{ order.id }}" data-status="completed">
+                                    <i class="fas fa-check-circle me-1"></i> Delivered
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center p-4">
+                    <img src="{{ url_for('static', filename='img/no_deliveries.svg') }}" alt="No Deliveries" 
+                        class="img-fluid mb-3" style="max-height: 120px;">
+                    <h6 class="text-muted">You have no active deliveries</h6>
+                    <p class="small text-muted">Accept an order to start delivering</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Deliveries -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-ez-dark text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i> Recent Deliveries
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if completed_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Restaurant</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Earnings</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in completed_orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>{{ order.restaurant.name }}</td>
+                                <td>{{ order.customer.username }}</td>
+                                <td>{{ order.created_at.strftime('%d %b, %I:%M %p') }}</td>
+                                <td>₹{{ order.total_amount }}</td>
+                                <td>₹{{ (order.total_amount * 0.10) | round(2) }}</td>
+                                <td>
+                                    <span class="badge bg-success">COMPLETED</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center p-4">
+                    <img src="{{ url_for('static', filename='img/no_history.svg') }}" alt="No History" 
+                        class="img-fluid mb-3" style="max-height: 120px;">
+                    <h6 class="text-muted">No delivery history</h6>
+                    <p class="small text-muted">Your completed deliveries will appear here</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Online/Offline Toggle
+    const onlineToggle = document.getElementById('online-toggle');
+    if (onlineToggle) {
+        onlineToggle.addEventListener('change', function() {
+            const isOnline = this.checked;
+            
+            // Update the toggle UI immediately
+            const toggleLabel = this.nextElementSibling;
+            const statusBadge = toggleLabel.querySelector('.badge');
+            
+            statusBadge.classList.remove('bg-success', 'bg-secondary');
+            statusBadge.classList.add(isOnline ? 'bg-success' : 'bg-secondary');
+            statusBadge.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+            
+            // Send status update to server
+            fetch('/api/delivery/update_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    is_online: isOnline
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Failed to update status:', data.message);
+                    // Revert UI if update failed
+                    this.checked = !isOnline;
+                    statusBadge.classList.remove('bg-success', 'bg-secondary');
+                    statusBadge.classList.add(!isOnline ? 'bg-success' : 'bg-secondary');
+                    statusBadge.textContent = !isOnline ? 'ONLINE' : 'OFFLINE';
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                // Revert UI if request failed
+                this.checked = !isOnline;
+                statusBadge.classList.remove('bg-success', 'bg-secondary');
+                statusBadge.classList.add(!isOnline ? 'bg-success' : 'bg-secondary');
+                statusBadge.textContent = !isOnline ? 'ONLINE' : 'OFFLINE';
+            });
+        });
+    }
+    
+    // Accept Order Buttons
+    const acceptOrderButtons = document.querySelectorAll('.accept-order-btn');
+    acceptOrderButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            
+            // Disable button to prevent double-clicks
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Accepting...';
+            
+            // Send request to accept order
+            fetch(`/api/orders/${orderId}/accept`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    // Reset button if failed
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check me-1"></i> Accept';
+                    
+                    // Show error message
+                    alert('Failed to accept order: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error accepting order:', error);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check me-1"></i> Accept';
+                alert('Error accepting order. Please try again.');
+            });
+        });
+    });
+    
+    // Update Status Buttons
+    const updateStatusButtons = document.querySelectorAll('.update-status-btn');
+    updateStatusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const status = this.getAttribute('data-status');
+            
+            // Disable button to prevent double-clicks
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+            
+            // Send request to update order status
+            fetch(`/api/orders/${orderId}/update-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    // Reset button if failed
+                    this.disabled = false;
+                    this.innerHTML = status === 'delivering' ? 
+                        '<i class="fas fa-box-open me-1"></i> Picked Up' : 
+                        '<i class="fas fa-check-circle me-1"></i> Delivered';
+                    
+                    // Show error message
+                    alert('Failed to update status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                this.disabled = false;
+                this.innerHTML = status === 'delivering' ? 
+                    '<i class="fas fa-box-open me-1"></i> Picked Up' : 
+                    '<i class="fas fa-check-circle me-1"></i> Delivered';
+                alert('Error updating status. Please try again.');
+            });
+        });
+    });
+    
+    // Refresh Button
+    const refreshButton = document.getElementById('refresh-button');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Refreshing...';
+            
+            // Reload the page
+            window.location.reload();
+        });
+    }
+});
+</script>
+{% endblock %}

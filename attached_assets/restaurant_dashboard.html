@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurant Dashboard - EZFOODZ{% endblock %}
+
+{% block styles %}
+<style>
+    .orders-table th, .orders-table td {
+        vertical-align: middle;
+    }
+    
+    .menu-item-search {
+        position: relative;
+    }
+    
+    .menu-item-search i {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        color: #6c757d;
+    }
+    
+    .menu-item-search input {
+        padding-left: 35px;
+    }
+    
+    .form-switch .form-check-input {
+        width: 3em;
+    }
+    
+    .form-switch .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    
+    .form-switch .form-check-input:not(:checked) {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>{{ restaurant.name }}</h1>
+        <p class="text-muted">{{ restaurant.cuisine_type }}</p>
+    </div>
+    <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end">
+        <div class="restaurant-status-toggle d-flex align-items-center">
+            <span class="me-2">Restaurant Status:</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="restaurant-status-toggle" {% if restaurant.is_open %}checked{% endif %}>
+                <label class="form-check-label" for="restaurant-status-toggle">
+                    <span id="restaurant-status-badge" class="badge {% if restaurant.is_open %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if restaurant.is_open %}OPEN{% else %}CLOSED{% endif %}
+                    </span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Orders Section -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Active Orders</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped orders-table mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Items</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if current_orders %}
+                                {% for order in current_orders %}
+                                <tr>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.customer_name }}</td>
+                                    <td>{{ order.order_items_display }}</td>
+                                    <td>
+                                        <span class="badge status-{{ order.status }}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('order_details', order_id=order.id) }}" class="btn btn-outline-secondary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if order.status == 'pending' %}
+                                            <button class="btn btn-outline-warning update-order-status" data-order-id="{{ order.id }}" data-status="preparing" title="Start Preparing">
+                                                <i class="fas fa-utensils"></i>
+                                            </button>
+                                            {% elif order.status == 'preparing' %}
+                                            <button class="btn btn-outline-info update-order-status" data-order-id="{{ order.id }}" data-status="ready" title="Mark as Ready">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% endif %}
+                                            {% if order.status in ['pending', 'preparing'] %}
+                                            <button class="btn btn-outline-danger update-order-status" data-order-id="{{ order.id }}" data-status="cancelled" title="Cancel Order">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No active orders</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order History -->
+        <div class="card">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Order History</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover orders-table mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if completed_orders %}
+                                {% for order in completed_orders %}
+                                <tr>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.customer_name }}</td>
+                                    <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <span class="badge status-{{ order.status }}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>
+                                        <a href="{{ url_for('order_details', order_id=order.id) }}" class="btn btn-sm btn-outline-secondary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No order history</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Menu Management Section -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Menu Management</h5>
+            </div>
+            <div class="card-body">
+                <!-- Search Bar -->
+                <div class="menu-item-search mb-3">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="menu-search" class="form-control" placeholder="Search menu items...">
+                </div>
+                
+                <div id="no-menu-results" class="alert alert-info" style="display: none;">
+                    No menu items match your search.
+                </div>
+                
+                <!-- Menu Items List -->
+                <div class="list-group">
+                    {% if menu_items %}
+                        {% for item in menu_items %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center menu-item-card {% if not item.is_available %}out-of-stock{% endif %}" data-menu-item-id="{{ item.id }}" data-category="{{ item.category }}">
+                                <div>
+                                    <h6 class="mb-1">{{ item.name }}</h6>
+                                    <p class="mb-1 small text-muted">₹{{ item.price }}</p>
+                                    <p class="card-text small">{{ item.description }}</p>
+                                    <span class="badge availability-badge {% if item.is_available %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if item.is_available %}In Stock{% else %}Out of Stock{% endif %}
+                                    </span>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input toggle-availability" type="checkbox" data-menu-item-id="{{ item.id }}" {% if item.is_available %}checked{% endif %}>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info">No menu items found. Add some items to your menu.</div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-plus me-1"></i> Add New Menu Item
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Restaurant Details -->
+        <div class="card">
+            <div class="card-header bg-ez-primary text-white">
+                <h5 class="mb-0">Restaurant Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Name</label>
+                    <p class="mb-1">{{ restaurant.name }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Description</label>
+                    <p class="mb-1">{{ restaurant.description }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Address</label>
+                    <p class="mb-1">{{ restaurant.address }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Phone</label>
+                    <p class="mb-1">{{ restaurant.phone }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Cuisine Type</label>
+                    <p class="mb-1">{{ restaurant.cuisine_type }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Rating</label>
+                    <p class="mb-1">
+                        <i class="fas fa-star text-warning"></i> {{ restaurant.rating }}/5
+                    </p>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" disabled>
+                        <i class="fas fa-edit me-1"></i> Edit Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/restaurant.js') }}"></script>
+{% endblock %}

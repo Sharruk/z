@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Dashboard - EZFOODZ{% endblock %}
+
+{% block styles %}
+<style>
+    .order-card {
+        transition: transform 0.2s ease;
+    }
+    
+    .order-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .badge.status-ready {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .badge.status-picking {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .badge.status-delivering {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .badge.status-completed {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .badge.status-cancelled {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Delivery Dashboard</h1>
+        <p class="text-muted">Welcome, {{ current_user.username }}</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <button class="btn btn-outline-primary refresh-data">
+            <i class="fas fa-sync-alt me-1"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- My Current Deliveries -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h4 class="mb-0">My Current Deliveries</h4>
+            </div>
+            <div class="card-body">
+                {% if my_orders %}
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        {% for order in my_orders %}
+                        <div class="col">
+                            <div class="card h-100 order-card shadow-sm">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Order #{{ order.id }}</span>
+                                    <span class="badge status-{{ order.status }}">{{ order.status|title }}</span>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ order.restaurant.name }}</h5>
+                                    <p class="card-text small text-muted">{{ order.order_items_display }}</p>
+                                    
+                                    <div class="mb-3">
+                                        <p class="mb-1"><strong>Customer:</strong> {{ order.customer.username }}</p>
+                                        <p class="mb-1"><strong>Phone:</strong> {{ order.customer.phone }}</p>
+                                        <p class="mb-1"><strong>Address:</strong> {{ order.delivery_address }}</p>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-primary">₹{{ order.total_amount }}</span>
+                                        <div>
+                                            <a href="{{ url_for('order_details', order_id=order.id) }}" class="btn btn-sm btn-outline-secondary me-1">
+                                                <i class="fas fa-eye"></i> Details
+                                            </a>
+                                            {% if order.status == 'picking' %}
+                                            <button class="btn btn-sm btn-primary update-order-status" data-order-id="{{ order.id }}" data-status="delivering">
+                                                <i class="fas fa-motorcycle"></i> Start Delivery
+                                            </button>
+                                            {% elif order.status == 'delivering' %}
+                                            <button class="btn btn-sm btn-success update-order-status" data-order-id="{{ order.id }}" data-status="completed">
+                                                <i class="fas fa-check"></i> Mark Delivered
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted small">
+                                    Ordered: {{ order.created_at.strftime('%b %d, %H:%M') }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        You don't have any active deliveries. Check available orders below.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Available Orders -->
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h4 class="mb-0">Available Orders</h4>
+            </div>
+            <div class="card-body">
+                {% if available_orders %}
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        {% for order in available_orders %}
+                        <div class="col">
+                            <div class="card h-100 order-card shadow-sm">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Order #{{ order.id }}</span>
+                                    <span class="badge status-{{ order.status }}">Ready for pickup</span>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ order.restaurant.name }}</h5>
+                                    <p class="card-text small text-muted mb-3">{{ order.order_items_display }}</p>
+                                    
+                                    <div class="mb-3">
+                                        <p class="mb-1"><strong>Restaurant Address:</strong> {{ order.restaurant.address }}</p>
+                                        <p class="mb-1"><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button class="btn btn-outline-primary update-order-status" data-order-id="{{ order.id }}" data-status="picking">
+                                            <i class="fas fa-motorcycle me-1"></i> Accept Delivery
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-footer d-flex justify-content-between align-items-center">
+                                    <span class="text-primary">₹{{ order.total_amount }}</span>
+                                    <small class="text-muted">Ready since: {{ order.updated_at.strftime('%H:%M') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No orders available for pickup at the moment.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Delivery Partner Stats -->
+        <div class="card mb-4">
+            <div class="card-header bg-ez-primary text-white">
+                <h4 class="mb-0">My Stats</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 border rounded text-center">
+                            <h5 class="mb-0">{{ my_orders|length }}</h5>
+                            <small class="text-muted">Active Deliveries</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded text-center">
+                            <h5 class="mb-0">{{ completed_orders|length }}</h5>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded text-center">
+                            <h5 class="mb-0">{{ available_orders|length }}</h5>
+                            <small class="text-muted">Available</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded text-center">
+                            <h5 class="mb-0">
+                                {% if completed_orders|length > 0 %}
+                                    ₹{{ (completed_orders|sum(attribute='total_amount') / completed_orders|length)|round(2) }}
+                                {% else %}
+                                    ₹0
+                                {% endif %}
+                            </h5>
+                            <small class="text-muted">Avg. Order</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delivery History -->
+        <div class="card">
+            <div class="card-header bg-ez-primary text-white">
+                <h4 class="mb-0">Recent Deliveries</h4>
+            </div>
+            <div class="card-body">
+                {% if completed_orders %}
+                    <div class="list-group">
+                        {% for order in completed_orders %}
+                            <a href="{{ url_for('order_details', order_id=order.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Order #{{ order.id }}</h6>
+                                    <small>{{ order.updated_at.strftime('%d %b') }}</small>
+                                </div>
+                                <div class="d-flex w-100 justify-content-between">
+                                    <p class="mb-1 small">{{ order.restaurant.name }}</p>
+                                    <span class="text-primary">₹{{ order.total_amount }}</span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        You haven't completed any deliveries yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update order status buttons
+    const orderStatusBtns = document.querySelectorAll('.update-order-status');
+    orderStatusBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const status = this.getAttribute('data-status');
+            updateOrderStatus(orderId, status);
+        });
+    });
+    
+    // Function to update order status
+    function updateOrderStatus(orderId, status) {
+        // Disable button to prevent double-clicks
+        const button = document.querySelector(`button[data-order-id="${orderId}"]`);
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        }
+        
+        fetch('/api/order/update_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: status
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Display success message
+                alert(data.message);
+                
+                // Refresh the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // Re-enable button
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = button.innerHTML.replace('<i class="fas fa-spinner fa-spin"></i> Processing...', button.innerHTML);
+                }
+                
+                // Display error message
+                alert(data.message || 'Error updating order status.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Re-enable button
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = button.innerHTML.replace('<i class="fas fa-spinner fa-spin"></i> Processing...', button.innerHTML);
+            }
+            
+            alert('An error occurred. Please try again.');
+        });
+    }
+    
+    // Refresh button
+    const refreshBtn = document.querySelector('.refresh-data');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            window.location.reload();
+        });
+    }
+});
+</script>
+{% endblock %}

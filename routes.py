@@ -1515,42 +1515,4 @@ def init_db():
         db.session.rollback()
         flash(f'Error initializing database: {str(e)}', 'danger')
         return redirect(url_for('home'))
-@app.route('/api/delivery/available-orders')
-@login_required
-@allowed_roles(['delivery'])
-def get_available_orders():
-    available_orders = Order.query.filter_by(
-        status='ready_for_pickup',
-        delivery_partner_id=None
-    ).all()
-    
-    orders_data = []
-    for order in available_orders:
-        restaurant = Restaurant.query.get(order.restaurant_id)
-        orders_data.append({
-            'id': order.id,
-            'restaurant_name': restaurant.name,
-            'restaurant_address': restaurant.address,
-            'customer_address': order.delivery_address,
-            'items': order.order_items_display,
-            'total_amount': order.total_amount,
-            'created_at': order.created_at.isoformat(),
-            'restaurant_maps_link': f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(restaurant.address)}",
-            'customer_maps_link': f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(order.delivery_address)}"
-        })
-    
-    return jsonify({
-        'success': True,
-        'orders': orders_data
-    })
-    
-    return jsonify({
-        'success': True,
-        'orders': [{
-            'id': order.id,
-            'restaurant_name': order.restaurant.name,
-            'restaurant_address': order.restaurant.address,
-            'items': order.order_items_display,
-            'created_at': order.created_at.isoformat()
-        } for order in available_orders]
-    })
+

@@ -880,9 +880,9 @@ def update_order_status():
         
         # Restaurants can only update to certain statuses
         allowed_statuses = {
-            'pending': ['preparing', 'cancelled'],
-            'preparing': ['ready'],
-            'ready': []  # Delivery partner takes over from here
+            'pending': ['preparing', 'cancelled', 'ready'],
+            'preparing': ['ready', 'cancelled'],
+            'ready': ['cancelled']  # Can still cancel until delivery partner picks up
         }
         if status not in allowed_statuses.get(order.status, []):
             return jsonify({'success': False, 'message': 'Invalid status transition'}), 400

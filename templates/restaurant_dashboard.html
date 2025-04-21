@@ -98,18 +98,19 @@
                                             <a href="{{ url_for('order_details', order_id=order.id) }}" class="btn btn-outline-secondary" title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            {% if order.status == 'pending' %}
-                                            <button class="btn btn-outline-warning update-order-status" data-order-id="{{ order.id }}" data-status="preparing" title="Start Preparing">
-                                                <i class="fas fa-utensils"></i>
-                                            </button>
-                                            {% elif order.status == 'preparing' %}
-                                            <button class="btn btn-outline-info update-order-status" data-order-id="{{ order.id }}" data-status="ready" title="Mark as Ready">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            {% endif %}
                                             {% if order.status in ['pending', 'preparing'] %}
-                                            <button class="btn btn-outline-danger update-order-status" data-order-id="{{ order.id }}" data-status="cancelled" title="Cancel Order">
-                                                <i class="fas fa-times"></i>
+                                            <button class="btn btn-sm btn-success update-order-status" 
+                                                data-order-id="{{ order.id }}" data-status="ready">
+                                                <i class="fas fa-check me-1"></i> Food Ready
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger update-order-status" 
+                                                data-order-id="{{ order.id }}" data-status="cancelled">
+                                                <i class="fas fa-times me-1"></i> Cancel
+                                            </button>
+                                            {% elif order.status == 'ready' %}
+                                            <button class="btn btn-sm btn-outline-danger update-order-status" 
+                                                data-order-id="{{ order.id }}" data-status="cancelled">
+                                                <i class="fas fa-times me-1"></i> Cancel
                                             </button>
                                             {% endif %}
                                         </div>

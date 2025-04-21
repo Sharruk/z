@@ -202,15 +202,24 @@
                     </button>
                 </div>
                 {% elif current_user.role == 'restaurant' %}
-                    {% if order.status == 'pending' %}
+                    {% if order.status in ['pending', 'preparing'] %}
                     <div class="d-grid gap-2">
-                        <button class="btn btn-warning update-order-status" data-order-id="{{ order.id }}" data-status="preparing">
-                            <i class="fas fa-utensils me-1"></i> Start Preparing
+                        {% if current_user.role == 'restaurant' %}
+                        <button class="btn btn-success update-order-status" data-order-id="{{ order.id }}" data-status="ready">
+                            <i class="fas fa-check me-1"></i> Food Ready
                         </button>
+                        {% endif %}
                         <button class="btn btn-outline-danger update-order-status" data-order-id="{{ order.id }}" data-status="cancelled">
                             <i class="fas fa-times me-1"></i> Cancel Order
                         </button>
                     </div>
+                    {% elif order.status == 'ready' and current_user.role == 'restaurant' %}
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-danger update-order-status" data-order-id="{{ order.id }}" data-status="cancelled">
+                            <i class="fas fa-times me-1"></i> Cancel Order
+                        </button>
+                    </div>
+                    {% endif %}
                     {% elif order.status == 'preparing' %}
                     <div class="d-grid gap-2">
                         <button class="btn btn-info update-order-status" data-order-id="{{ order.id }}" data-status="ready">

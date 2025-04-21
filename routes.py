@@ -9,14 +9,15 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import or_, func
-
-# Configure Stripe
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-
 from app import app, db
 from models import User, Restaurant, MenuItem, Order, OrderItem
 from utils import allowed_roles
 from forms import LoginForm, RegisterForm, CompleteProfileForm
+
+# Configure Stripe
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+
+
 
 # Authentication routes
 @app.route('/login', methods=['GET', 'POST'])

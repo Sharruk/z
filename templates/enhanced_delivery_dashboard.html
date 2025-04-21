@@ -40,7 +40,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
@@ -59,7 +59,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
@@ -79,7 +79,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
@@ -128,8 +128,7 @@
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-ez-primary accept-order-btn" 
-                                    data-order-id="{{ order.id }}"
-                                    data-restaurant-address="{{ order.restaurant.address }}">
+                                    data-order-id="{{ order.id }}">
                                     <i class="fas fa-check me-1"></i> Accept
                                 </button>
                             </div>
@@ -148,7 +147,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- My Current Deliveries -->
     <div class="col-md-6 mb-4">
         <div class="card border-0 shadow-sm">
@@ -189,7 +188,7 @@
                                     class="btn btn-sm btn-outline-ez-primary mb-1 w-100">
                                     <i class="fas fa-map-marker-alt me-1"></i> Track
                                 </a>
-
+                                
                                 {% if order.status == 'picking' %}
                                 <button class="btn btn-sm btn-outline-success w-100 update-status-btn" 
                                     data-order-id="{{ order.id }}" data-status="delivering">
@@ -282,15 +281,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (onlineToggle) {
         onlineToggle.addEventListener('change', function() {
             const isOnline = this.checked;
-
+            
             // Update the toggle UI immediately
             const toggleLabel = this.nextElementSibling;
             const statusBadge = toggleLabel.querySelector('.badge');
-
+            
             statusBadge.classList.remove('bg-success', 'bg-secondary');
             statusBadge.classList.add(isOnline ? 'bg-success' : 'bg-secondary');
             statusBadge.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
-
+            
             // Send status update to server
             fetch('/api/delivery/update_status', {
                 method: 'POST',
@@ -322,18 +321,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
+    
     // Accept Order Buttons
     const acceptOrderButtons = document.querySelectorAll('.accept-order-btn');
     acceptOrderButtons.forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.getAttribute('data-order-id');
-            const restaurantAddress = this.getAttribute('data-restaurant-address');
-
+            
             // Disable button to prevent double-clicks
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Accepting...';
-
+            
             // Send request to accept order
             fetch(`/api/orders/${orderId}/accept`, {
                 method: 'POST',
@@ -344,13 +342,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirect to Google Maps
-                    window.location.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantAddress)}`;
+                    // Reload page to reflect changes
+                    window.location.reload();
                 } else {
                     // Reset button if failed
                     this.disabled = false;
                     this.innerHTML = '<i class="fas fa-check me-1"></i> Accept';
-
+                    
                     // Show error message
                     alert('Failed to accept order: ' + data.message);
                 }
@@ -363,18 +361,18 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-
+    
     // Update Status Buttons
     const updateStatusButtons = document.querySelectorAll('.update-status-btn');
     updateStatusButtons.forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.getAttribute('data-order-id');
             const status = this.getAttribute('data-status');
-
+            
             // Disable button to prevent double-clicks
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
-
+            
             // Send request to update order status
             fetch(`/api/orders/${orderId}/update-status`, {
                 method: 'POST',
@@ -396,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.innerHTML = status === 'delivering' ? 
                         '<i class="fas fa-box-open me-1"></i> Picked Up' : 
                         '<i class="fas fa-check-circle me-1"></i> Delivered';
-
+                    
                     // Show error message
                     alert('Failed to update status: ' + data.message);
                 }
@@ -411,14 +409,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-
+    
     // Refresh Button
     const refreshButton = document.getElementById('refresh-button');
     if (refreshButton) {
         refreshButton.addEventListener('click', function() {
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Refreshing...';
-
+            
             // Reload the page
             window.location.reload();
         });

@@ -792,19 +792,40 @@ def update_order_status():
     
     order = Order.query.get_or_404(order_id)
     
-    # Restaurant marking order as ready
+    # Restaurant marking order as ready or cancelled
     if current_user.role == 'restaurant':
         restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
         if order.restaurant_id != restaurant.id:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
         
-        if status == 'ready_for_pickup' and order.status == 'preparing':
-            order.status = 'ready_for_pickup'
-            db.session.commit()
+        # Valid status transitions for restaurant
+        valid_transitions = {
+            'pending': ['preparing', 'ready', 'cancelled'],
+            'preparing': ['ready', 'cancelled'],
+            'ready': ['cancelled']
+        }
+        
+        if status not in valid_transitions.get(order.status, []):
             return jsonify({
-                'success': True,
-                'message': 'Order ready for pickup. Notifying delivery partners.'
-            })
+                'success': False,
+                'message': f'Cannot transition from {order.status} to {status}'
+            }), 400
+        
+        # Update order status
+        order.status = status
+        
+        # If cancelled, add to order history
+        if status == 'cancelled':
+            # You might want to add a reason field or additional logging here
+            pass
+            
+        db.session.commit()
+        
+        message = 'Order cancelled successfully' if status == 'cancelled' else 'Order marked as ready for pickup'
+        return jsonify({
+            'success': True,
+            'message': message
+        })
     
     # Delivery partner accepting order
     elif current_user.role == 'delivery':

@@ -241,28 +241,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // Order Status Updates
     const statusButtons = document.querySelectorAll('.update-order-status');
     statusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', async function() {
             const orderId = this.dataset.orderId;
             const status = this.dataset.status;
-
-            fetch('/api/order/update_status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    order_id: orderId,
-                    status: status
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error updating order status: ' + data.message);
+            
+            // Confirm cancellation
+            if (status === 'cancelled') {
+                if (!confirm('Are you sure you want to cancel this order?')) {
+                    return;
                 }
-            });
+            }
+            
+            // Disable button and show loading state
+            const originalText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            try {
+                const response = await fetch('/api/order/update_status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        status: status
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (window.showToast) {
+                        window.showToast(data.message, 'success');
+                    }
+                    // Reload after a short delay to show the toast
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    this.disabled = false;
+                    this.innerHTML = originalText;
+                    alert(data.message || 'Error updating order status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.disabled = false;
+                this.innerHTML = originalText;
+                alert('An error occurred. Please try again.');
+            }
         });
     });
 

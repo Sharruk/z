@@ -114,6 +114,7 @@ class Order(db.Model):
     
     @property
     def item_count(self):
+        """Get total number of items in the order"""
         return sum(item.quantity for item in self.items.all())
 
 class OrderItem(db.Model):

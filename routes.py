@@ -923,7 +923,8 @@ def update_order_status():
         
         # Delivery partners can only update to certain statuses
         allowed_statuses = {
-            'picking': ['delivering'],
+            'picking': ['order_received', 'delivering'],
+            'order_received': ['delivering'],
             'delivering': ['completed']
         }
         if status not in allowed_statuses.get(order.status, []):

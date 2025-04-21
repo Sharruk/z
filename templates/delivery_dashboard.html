@@ -86,8 +86,8 @@
                                                 <i class="fas fa-eye"></i> Details
                                             </a>
                                             {% if order.status == 'picking' %}
-                                            <button class="btn btn-sm btn-primary update-order-status" data-order-id="{{ order.id }}" data-status="delivering">
-                                                <i class="fas fa-motorcycle"></i> Start Delivery
+                                            <button class="btn btn-sm btn-success update-order-status" data-order-id="{{ order.id }}" data-status="order_received">
+                                                <i class="fas fa-check"></i> Order Received
                                             </button>
                                             {% elif order.status == 'delivering' %}
                                             <button class="btn btn-sm btn-success update-order-status" data-order-id="{{ order.id }}" data-status="completed">
@@ -136,8 +136,10 @@
                                         <p class="mb-1"><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
                                     </div>
                                     
-                                    <div class="d-grid">
-                                        <button class="btn btn-outline-primary update-order-status" data-order-id="{{ order.id }}" data-status="picking">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary accept-delivery" 
+                                                data-order-id="{{ order.id }}"
+                                                data-restaurant-address="{{ order.restaurant.address }}">
                                             <i class="fas fa-motorcycle me-1"></i> Accept Delivery
                                         </button>
                                     </div>
@@ -236,6 +238,52 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Handle accept delivery buttons
+    const acceptDeliveryBtns = document.querySelectorAll('.accept-delivery');
+    acceptDeliveryBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const restaurantAddress = this.getAttribute('data-restaurant-address');
+            
+            // First update order status
+            fetch('/api/order/update_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    status: 'picking'
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Get current location and navigate to restaurant
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            const currentLat = position.coords.latitude;
+                            const currentLng = position.coords.longitude;
+                            const mapsUrl = `https://www.google.com/maps/dir/${currentLat},${currentLng}/${encodeURIComponent(restaurantAddress)}`;
+                            window.open(mapsUrl, '_blank');
+                            location.reload(); // Refresh the dashboard
+                        });
+                    } else {
+                        // Fallback if geolocation is not available
+                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantAddress)}`, '_blank');
+                        location.reload();
+                    }
+                } else {
+                    alert(data.message || 'Error updating order status.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        });
+    });
+
     // Update order status buttons
     const orderStatusBtns = document.querySelectorAll('.update-order-status');
     orderStatusBtns.forEach(btn => {

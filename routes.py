@@ -255,25 +255,3 @@ def restaurant_dashboard():
         completed_orders=completed_orders,
         menu_items=menu_items
     )
-
-
-@app.route('/restaurant_bot')
-@login_required
-@allowed_roles(['restaurant'])
-def restaurant_bot():
-    """Restaurant bot management page"""
-    # Get restaurant owned by current user
-    restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
-    
-    if not restaurant:
-        flash('Restaurant not found. Please contact support.', 'danger')
-        return redirect(url_for('home'))
-
-    # Get bot settings from session
-    bot_settings = session.get('restaurant_bot_settings', {}).get(str(restaurant.id), {
-        'bot_enabled': False,
-        'auto_accept_orders': False,
-        'auto_ready_time': 15
-    })
-    
-    return render_template('restaurant_bot.html', restaurant=restaurant, bot_settings=bot_settings)

@@ -218,3 +218,62 @@ def update_order_status():
             })
 
     return jsonify({'success': False, 'message': 'Invalid status transition'}), 400
+
+@app.route('/restaurant_dashboard')
+@login_required
+@allowed_roles(['restaurant'])
+def restaurant_dashboard():
+    """Restaurant owner dashboard"""
+    # Get restaurant owned by current user
+    restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
+
+    if not restaurant:
+        flash('Restaurant not found. Please contact support.', 'danger')
+        return redirect(url_for('home'))
+
+    # Get current orders for this restaurant
+    current_orders = Order.query.filter_by(
+        restaurant_id=restaurant.id
+    ).filter(
+        Order.status.notin_(['completed', 'cancelled'])
+    ).order_by(Order.created_at.desc()).all()
+
+    # Get completed orders for this restaurant
+    completed_orders = Order.query.filter_by(
+        restaurant_id=restaurant.id
+    ).filter(
+        Order.status.in_(['completed', 'cancelled'])
+    ).order_by(Order.created_at.desc()).limit(10).all()
+
+    # Get menu items
+    menu_items = MenuItem.query.filter_by(restaurant_id=restaurant.id).all()
+
+    return render_template(
+        'restaurant_dashboard.html',
+        restaurant=restaurant,
+        current_orders=current_orders,
+        completed_orders=completed_orders,
+        menu_items=menu_items
+    )
+
+
+@app.route('/restaurant_bot')
+@login_required
+@allowed_roles(['restaurant'])
+def restaurant_bot():
+    """Restaurant bot management page"""
+    # Get restaurant owned by current user
+    restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
+    
+    if not restaurant:
+        flash('Restaurant not found. Please contact support.', 'danger')
+        return redirect(url_for('home'))
+
+    # Get bot settings from session
+    bot_settings = session.get('restaurant_bot_settings', {}).get(str(restaurant.id), {
+        'bot_enabled': False,
+        'auto_accept_orders': False,
+        'auto_ready_time': 15
+    })
+    
+    return render_template('restaurant_bot.html', restaurant=restaurant, bot_settings=bot_settings)

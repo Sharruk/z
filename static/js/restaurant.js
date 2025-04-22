@@ -4,6 +4,34 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Restaurant Details Update
+    const saveRestaurantDetails = document.getElementById('saveRestaurantDetails');
+    if (saveRestaurantDetails) {
+        saveRestaurantDetails.addEventListener('click', async function() {
+            const form = document.getElementById('editRestaurantForm');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/api/restaurant/update_details', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success message and reload page
+                    alert('Restaurant details updated successfully!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error updating restaurant details');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while updating restaurant details');
+            }
+        });
+    }
     // Add Menu Item
     const saveMenuItem = document.getElementById('saveMenuItem');
     if (saveMenuItem) {

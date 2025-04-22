@@ -657,6 +657,62 @@ def update_restaurant():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/api/restaurant/update_details', methods=['POST'])
+@login_required
+@allowed_roles(['restaurant'])
+def update_restaurant_details():
+    restaurant = Restaurant.query.filter_by(owner_id=current_user.id).first()
+    if not restaurant:
+        return jsonify({'success': False, 'message': 'Restaurant not found'}), 404
+    
+    try:
+        # Update basic details
+        restaurant.name = request.form.get('name', restaurant.name)
+        restaurant.description = request.form.get('description', restaurant.description)
+        restaurant.address = request.form.get('address', restaurant.address)
+        restaurant.phone = request.form.get('phone', restaurant.phone)
+        restaurant.cuisine_type = request.form.get('cuisine_type', restaurant.cuisine_type)
+        
+        # Handle image upload if provided
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                import uuid
+                from werkzeug.utils import secure_filename
+                
+                UPLOAD_FOLDER = 'static/uploads'
+                ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                
+                # Validate file extension
+                ext = file.filename.rsplit('.', 1)[1].lower()
+                if ext not in ALLOWED_EXTENSIONS:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Invalid image format. Please upload JPG, PNG, GIF or WEBP files.'
+                    }), 400
+                
+                # Create unique filename
+                filename = f"restaurant_{restaurant.id}_{uuid.uuid4().hex}.{ext}"
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                
+                # Save file
+                file.save(file_path)
+                restaurant.image_url = f"/static/uploads/{filename}"
+        
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': 'Restaurant details updated successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating restaurant: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error updating restaurant details: {str(e)}'
+        }), 500
+
 @app.route('/api/restaurant/update_location', methods=['POST'])
 @login_required
 @allowed_roles(['restaurant'])

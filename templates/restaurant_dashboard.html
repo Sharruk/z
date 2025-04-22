@@ -382,7 +382,25 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Description</label>
-                                <textarea class="form-control" name="description" rows="3">{{ restaurant.description }}</textarea>
+                                <textarea class="form-control" name="description" rows="3" required>{{ restaurant.description }}</textarea>
+                                <small class="text-muted">A short summary of your restaurant</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cuisine Type</label>
+                                <select class="form-control" name="cuisine_type" required>
+                                    <option value="">Select cuisine type...</option>
+                                    <option value="South Indian" {% if restaurant.cuisine_type == 'South Indian' %}selected{% endif %}>South Indian</option>
+                                    <option value="North Indian" {% if restaurant.cuisine_type == 'North Indian' %}selected{% endif %}>North Indian</option>
+                                    <option value="Chinese" {% if restaurant.cuisine_type == 'Chinese' %}selected{% endif %}>Chinese</option>
+                                    <option value="Italian" {% if restaurant.cuisine_type == 'Italian' %}selected{% endif %}>Italian</option>
+                                    <option value="Fast Food" {% if restaurant.cuisine_type == 'Fast Food' %}selected{% endif %}>Fast Food</option>
+                                    <option value="Other" {% if restaurant.cuisine_type and restaurant.cuisine_type not in ['South Indian', 'North Indian', 'Chinese', 'Italian', 'Fast Food'] %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Rating (Temporary)</label>
+                                <input type="number" class="form-control" name="rating" min="0" max="5" step="0.1" value="{{ restaurant.rating }}" required>
+                                <small class="text-muted">Rate from 0.0 to 5.0 (temporary until customer ratings are implemented)</small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Address (Google Maps URL)</label>
@@ -391,10 +409,6 @@
                             <div class="mb-3">
                                 <label class="form-label">Phone Number</label>
                                 <input type="tel" class="form-control" name="phone" value="{{ restaurant.phone }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Cuisine Type</label>
-                                <input type="text" class="form-control" name="cuisine_type" value="{{ restaurant.cuisine_type }}">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Restaurant Image</label>

@@ -673,6 +673,18 @@ def update_restaurant_details():
         restaurant.phone = request.form.get('phone', restaurant.phone)
         restaurant.cuisine_type = request.form.get('cuisine_type', restaurant.cuisine_type)
         
+        # Temporary: Manual rating update (remove this section when implementing customer ratings)
+        rating = request.form.get('rating')
+        if rating:
+            try:
+                rating_value = float(rating)
+                if 0 <= rating_value <= 5:
+                    restaurant.rating = rating_value
+                else:
+                    return jsonify({'success': False, 'message': 'Rating must be between 0.0 and 5.0'}), 400
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid rating value'}), 400
+        
         # Handle image upload if provided
         if 'image' in request.files:
             file = request.files['image']

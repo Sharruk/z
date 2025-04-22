@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('editRestaurantForm');
             const formData = new FormData(form);
             
+            // Validate rating
+            const rating = parseFloat(formData.get('rating'));
+            if (isNaN(rating) || rating < 0 || rating > 5) {
+                alert('Rating must be between 0.0 and 5.0');
+                return;
+            }
+            
             try {
                 const response = await fetch('/api/restaurant/update_details', {
                     method: 'POST',

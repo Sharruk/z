@@ -775,6 +775,8 @@ def food_prepared():
 @login_required
 @allowed_roles(['delivery'])
 def accept_order():
+    from urllib.parse import quote_plus
+    
     data = request.json
     order_id = data.get('order_id')
     
@@ -790,17 +792,29 @@ def accept_order():
     if not order:
         return jsonify({'success': False, 'message': 'Order not available'}), 404
         
-    order.delivery_partner_id = current_user.id
-    order.status = 'picking'
-    db.session.commit()
-    
-    maps_url = f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(order.restaurant.address)}"
-    
-    return jsonify({
-        'success': True,
-        'message': 'Order accepted successfully',
-        'maps_url': maps_url
-    })
+    try:
+        order.delivery_partner_id = current_user.id
+        order.status = 'picking'
+        db.session.commit()
+        
+        # Generate Google Maps URL
+        restaurant_address = order.restaurant.address
+        if not restaurant_address.startswith('http'):
+            maps_url = f"https://www.google.com/maps/dir/?api=1&destination={quote_plus(restaurant_address)}"
+        else:
+            maps_url = restaurant_address
+        
+        return jsonify({
+            'success': True,
+            'message': 'Order accepted successfully',
+            'maps_url': maps_url
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error accepting order: {str(e)}'
+        }), 500
 
 @app.route('/api/delivery/available_orders')
 @login_required

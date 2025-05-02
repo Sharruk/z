@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+instance/ezfoodz.db
+*.webp
+*.png
+*.jpg

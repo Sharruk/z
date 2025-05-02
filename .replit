@@ -1,12 +1,12 @@
 modules = ["web", "python-3.11", "nodejs-20", "nix"]
-run = "python3 main.py"
+run = "python3 app.py"
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "python3 main.py"]
+run = ["sh", "-c", "python3 app.py"]
 
 [workflows]
 runButton = "Run App"

@@ -122,6 +122,35 @@ def complete_profile():
     
     if request.method == 'POST':
         phone = request.form.get('phone')
+
+
+@app.route('/edit-profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    
+    if request.method == 'GET':
+        # Pre-fill form with current user data
+        form.name.data = current_user.username
+        form.email.data = current_user.email
+        form.phone.data = current_user.phone
+        form.address.data = current_user.address
+    
+    if form.validate_on_submit():
+        try:
+            current_user.username = form.name.data
+            current_user.email = form.email.data
+            current_user.phone = form.phone.data
+            current_user.address = form.address.data
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('user_dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating profile: {str(e)}', 'danger')
+    
+    return render_template('edit_profile.html', form=form)
+
         address = request.form.get('address')
         
         if not phone or not address:

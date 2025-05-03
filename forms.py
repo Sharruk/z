@@ -26,3 +26,9 @@ class CompleteProfileForm(FlaskForm):
     phone = StringField('Phone Number', validators=[DataRequired(), Length(min=10, max=15)])
     address = TextAreaField('Delivery Address', validators=[DataRequired()])
     submit = SubmitField('Complete Profile')
+class EditProfileForm(FlaskForm):
+    name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone = StringField('Phone Number', validators=[Length(min=10, max=15)])
+    address = TextAreaField('Address', validators=[DataRequired()])
+    submit = SubmitField('Update Profile')

@@ -137,6 +137,28 @@ def complete_profile():
     
     return render_template('complete_profile.html', error=error, form=form)
 
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+@allowed_roles(['customer'])
+def edit_profile():
+    form = EditProfileForm()
+    if request.method == 'GET':
+        form.name.data = current_user.username
+        form.email.data = current_user.email
+        form.phone.data = current_user.phone
+        form.address.data = current_user.address
+    
+    if form.validate_on_submit():
+        current_user.username = form.name.data
+        current_user.email = form.email.data
+        current_user.phone = form.phone.data
+        current_user.address = form.address.data
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('user_dashboard'))
+    
+    return render_template('edit_profile.html', form=form)
+
 @app.route('/logout')
 @login_required
 def logout():

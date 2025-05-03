@@ -159,6 +159,13 @@ def edit_profile():
     
     return render_template('edit_profile.html', form=form)
 
+@app.route('/change_password')
+@login_required
+def change_password():
+    # TODO: Implement password change functionality
+    flash('Password change feature coming soon!', 'info')
+    return redirect(url_for('edit_profile'))
+
 @app.route('/logout')
 @login_required
 def logout():

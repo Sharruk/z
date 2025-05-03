@@ -144,13 +144,11 @@ def edit_profile():
     form = EditProfileForm()
     if request.method == 'GET':
         form.name.data = current_user.username
-        form.email.data = current_user.email
         form.phone.data = current_user.phone
         form.address.data = current_user.address
     
     if form.validate_on_submit():
         current_user.username = form.name.data
-        current_user.email = form.email.data
         current_user.phone = form.phone.data
         current_user.address = form.address.data
         db.session.commit()

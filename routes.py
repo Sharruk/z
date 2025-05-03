@@ -12,7 +12,7 @@ from sqlalchemy import or_, func
 from app import app, db
 from models import User, Restaurant, MenuItem, Order, OrderItem
 from utils import allowed_roles
-from forms import LoginForm, RegisterForm, CompleteProfileForm
+from forms import LoginForm, RegisterForm, CompleteProfileForm, EditProfileForm
 
 # Configure Stripe
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')

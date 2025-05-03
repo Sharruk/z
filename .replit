@@ -9,7 +9,7 @@ deploymentTarget = "autoscale"
 run = ["sh", "-c", "python3 app.py"]
 
 [workflows]
-runButton = "Run App"
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "Project"
@@ -38,6 +38,15 @@ waitForPort = 5000
 [[workflows.workflow]]
 name = "Run App"
 author = 41756676
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
+
+[[workflows.workflow]]
+name = "Run"
+author = 41812396
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
